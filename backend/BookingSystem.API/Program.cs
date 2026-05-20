@@ -1,5 +1,6 @@
 using System.Text;
 using BookingSystem.API.Database;
+using BookingSystem.API.Repositories;
 using BookingSystem.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -36,7 +37,10 @@ builder.Services.AddSwaggerGen(c =>
 
 var connectionString = builder.Configuration.GetConnectionString("Default")!;
 builder.Services.AddSingleton(new DatabaseConnection(connectionString));
-builder.Services.AddScoped<AuthService>();
+
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var jwtSecret = builder.Configuration["Jwt:Secret"]!;
 builder.Services

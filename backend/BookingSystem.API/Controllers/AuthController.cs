@@ -8,9 +8,9 @@ namespace BookingSystem.API.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
-    private readonly AuthService _auth;
+    private readonly IAuthService _auth;
 
-    public AuthController(AuthService auth) => _auth = auth;
+    public AuthController(IAuthService auth) => _auth = auth;
 
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest req)
