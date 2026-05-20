@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: booking_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bookingdb
+      POSTGRES_USER: bookinguser
+      POSTGRES_PASSWORD: bookingpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookinguser -d bookingdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: booking_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: "Host=db;Port=5432;Database=bookingdb;Username=bookinguser;Password=bookingpass"
+      Jwt__Secret: "CHANGE_ME_IN_PRODUCTION_USE_A_LONG_RANDOM_SECRET"
+      Jwt__Issuer: "booking-api"
+      Jwt__Audience: "booking-client"
+      Jwt__AccessTokenExpiryMinutes: "15"
+      Jwt__RefreshTokenExpiryDays: "7"
+    ports:
+      - "8080:8080"
+
+volumes:
+  pg_data:
