@@ -1,8 +1,7 @@
-using BookingSystem.API.Database;
-using BookingSystem.API.Models;
+using BookingSystem.API.Shared.Database;
 using Npgsql;
 
-namespace BookingSystem.API.Repositories;
+namespace BookingSystem.API.Features.Auth;
 
 public class UserRepository : IUserRepository
 {

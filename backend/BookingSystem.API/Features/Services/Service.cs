@@ -1,4 +1,4 @@
-namespace BookingSystem.API.Models;
+namespace BookingSystem.API.Features.Services;
 
 public class Service
 {

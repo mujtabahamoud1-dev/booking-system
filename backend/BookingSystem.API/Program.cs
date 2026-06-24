@@ -1,7 +1,6 @@
 using System.Text;
-using BookingSystem.API.Database;
-using BookingSystem.API.Repositories;
-using BookingSystem.API.Services;
+using BookingSystem.API.Shared.Database;
+using BookingSystem.API.Features.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -71,6 +70,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+DatabaseMigrator.Run(connectionString);
 
 app.UseSwagger();
 app.UseSwaggerUI();

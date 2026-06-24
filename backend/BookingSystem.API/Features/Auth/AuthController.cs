@@ -1,8 +1,6 @@
-using BookingSystem.API.DTOs;
-using BookingSystem.API.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BookingSystem.API.Controllers;
+namespace BookingSystem.API.Features.Auth;
 
 [ApiController]
 [Route("api/auth")]

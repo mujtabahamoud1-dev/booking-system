@@ -1,7 +1,5 @@
-using BookingSystem.API.DTOs;
-using BookingSystem.API.Models;
 
-namespace BookingSystem.API.Services;
+namespace BookingSystem.API.Features.Auth;
 
 public interface IAuthService
 {

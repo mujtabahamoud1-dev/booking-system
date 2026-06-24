@@ -1,4 +1,4 @@
-namespace BookingSystem.API.DTOs;
+namespace BookingSystem.API.Features.Auth;
 
 public record RegisterRequest(string Name, string Email, string Password, string? Phone);
 

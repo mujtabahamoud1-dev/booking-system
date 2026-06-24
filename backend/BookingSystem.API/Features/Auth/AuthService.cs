@@ -2,12 +2,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using BookingSystem.API.DTOs;
-using BookingSystem.API.Models;
-using BookingSystem.API.Repositories;
 using Microsoft.IdentityModel.Tokens;
 
-namespace BookingSystem.API.Services;
+namespace BookingSystem.API.Features.Auth;
 
 public class AuthService : IAuthService
 {

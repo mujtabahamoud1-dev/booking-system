@@ -1,6 +1,6 @@
 using Npgsql;
 
-namespace BookingSystem.API.Database;
+namespace BookingSystem.API.Shared.Database;
 
 public class DatabaseConnection
 {

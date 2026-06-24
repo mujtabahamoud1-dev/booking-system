@@ -1,4 +1,4 @@
-namespace BookingSystem.API.Models;
+namespace BookingSystem.API.Features.Auth;
 
 public class User
 {

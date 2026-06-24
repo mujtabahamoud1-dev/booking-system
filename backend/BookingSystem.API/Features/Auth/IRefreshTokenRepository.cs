@@ -1,6 +1,5 @@
-using BookingSystem.API.Models;
 
-namespace BookingSystem.API.Repositories;
+namespace BookingSystem.API.Features.Auth;
 
 public interface IRefreshTokenRepository
 {
