@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace BookingSystem.API.Features.Auth;
@@ -10,13 +11,13 @@ public class AuthService : IAuthService
 {
     private readonly IUserRepository _users;
     private readonly IRefreshTokenRepository _tokens;
-    private readonly IConfiguration _config;
+    private readonly JwtSettings _jwt;
 
-    public AuthService(IUserRepository users, IRefreshTokenRepository tokens, IConfiguration config)
+    public AuthService(IUserRepository users, IRefreshTokenRepository tokens, IOptions<JwtSettings> jwt)
     {
         _users  = users;
         _tokens = tokens;
-        _config = config;
+        _jwt    = jwt.Value;
     }
 
     public async Task<User?> RegisterAsync(RegisterRequest req)
@@ -63,7 +64,7 @@ public class AuthService : IAuthService
 
     public string GenerateAccessToken(User user)
     {
-        var key   = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Secret"]!));
+        var key   = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -75,16 +76,16 @@ public class AuthService : IAuthService
         };
 
         var token = new JwtSecurityToken(
-            issuer:             _config["Jwt:Issuer"],
-            audience:           _config["Jwt:Audience"],
+            issuer:             _jwt.Issuer,
+            audience:           _jwt.Audience,
             claims:             claims,
-            expires:            DateTime.UtcNow.AddMinutes(int.Parse(_config["Jwt:AccessTokenExpiryMinutes"]!)),
+            expires:            DateTime.UtcNow.AddMinutes(_jwt.AccessTokenExpiryMinutes),
             signingCredentials: creds);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    private int RefreshTokenExpiryDays => int.Parse(_config["Jwt:RefreshTokenExpiryDays"]!);
+    private int RefreshTokenExpiryDays => _jwt.RefreshTokenExpiryDays;
 
     private static string GenerateRefreshToken() =>
         Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
