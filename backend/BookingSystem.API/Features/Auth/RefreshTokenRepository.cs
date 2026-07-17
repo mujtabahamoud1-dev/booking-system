@@ -9,12 +9,14 @@ public class RefreshTokenRepository : IRefreshTokenRepository
 
     public RefreshTokenRepository(DatabaseConnection db) => _db = db;
 
-    public async Task CreateAsync(int userId, string token, DateTime expiresAt)
+    public async Task CreateAsync(int userId, string token, DateTime expiresAt, IUnitOfWork? uow = null)
     {
-        await using var conn = await _db.OpenAsync();
+        await using var owned = uow is null ? await _db.OpenAsync() : null;
+        var conn = uow?.Connection ?? owned!;
+
         await using var cmd = new NpgsqlCommand(@"
             INSERT INTO refresh_tokens (user_id, token, expires_at)
-            VALUES (@userId, @token, @expiresAt)", conn);
+            VALUES (@userId, @token, @expiresAt)", conn, uow?.Transaction);
 
         cmd.Parameters.AddWithValue("userId", userId);
         cmd.Parameters.AddWithValue("token", token);
@@ -56,11 +58,13 @@ public class RefreshTokenRepository : IRefreshTokenRepository
         return (refreshToken, user);
     }
 
-    public async Task RevokeByIdAsync(int id)
+    public async Task RevokeByIdAsync(int id, IUnitOfWork? uow = null)
     {
-        await using var conn = await _db.OpenAsync();
+        await using var owned = uow is null ? await _db.OpenAsync() : null;
+        var conn = uow?.Connection ?? owned!;
+
         await using var cmd = new NpgsqlCommand(
-            "UPDATE refresh_tokens SET is_revoked = TRUE WHERE id = @id", conn);
+            "UPDATE refresh_tokens SET is_revoked = TRUE WHERE id = @id", conn, uow?.Transaction);
         cmd.Parameters.AddWithValue("id", id);
         await cmd.ExecuteNonQueryAsync();
     }

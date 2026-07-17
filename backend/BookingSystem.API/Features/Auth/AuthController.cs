@@ -46,12 +46,11 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "No refresh token." });
 
         var result = await _auth.RefreshAsync(token);
-        if (result is null)
+        if (!result.Succeeded)
             return Unauthorized(new { message = "Invalid or expired refresh token." });
 
-        var (user, newRefreshToken) = result.Value;
-        SetRefreshTokenCookie(newRefreshToken);
-        return Ok(new AuthResponse(_auth.GenerateAccessToken(user), user.Role, user.Name));
+        SetRefreshTokenCookie(result.RefreshToken!);
+        return Ok(new AuthResponse(_auth.GenerateAccessToken(result.User!), result.User!.Role, result.User!.Name));
     }
 
     [HttpPost("logout")]

@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using BookingSystem.API.Shared.Database;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -11,13 +12,19 @@ public class AuthService : IAuthService
 {
     private readonly IUserRepository _users;
     private readonly IRefreshTokenRepository _tokens;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
     private readonly JwtSettings _jwt;
 
-    public AuthService(IUserRepository users, IRefreshTokenRepository tokens, IOptions<JwtSettings> jwt)
+    public AuthService(
+        IUserRepository users,
+        IRefreshTokenRepository tokens,
+        IUnitOfWorkFactory unitOfWorkFactory,
+        IOptions<JwtSettings> jwt)
     {
-        _users  = users;
-        _tokens = tokens;
-        _jwt    = jwt.Value;
+        _users             = users;
+        _tokens            = tokens;
+        _unitOfWorkFactory = unitOfWorkFactory;
+        _jwt               = jwt.Value;
     }
 
     public async Task<User?> RegisterAsync(RegisterRequest req)
@@ -42,21 +49,27 @@ public class AuthService : IAuthService
         return (user, refreshToken);
     }
 
-    public async Task<(User User, string RefreshToken)?> RefreshAsync(string token)
+    public async Task<RefreshResult> RefreshAsync(string token)
     {
         var result = await _tokens.GetWithUserAsync(token);
-        if (result is null) return null;
+        if (result is null)
+            return RefreshResult.Failure(RefreshFailureReason.TokenNotFound);
 
         var (refreshToken, user) = result.Value;
-        if (refreshToken.IsRevoked || refreshToken.ExpiresAt < DateTime.UtcNow)
-            return null;
+        if (refreshToken.IsRevoked)
+            return RefreshResult.Failure(RefreshFailureReason.TokenRevoked);
+        if (refreshToken.ExpiresAt < DateTime.UtcNow)
+            return RefreshResult.Failure(RefreshFailureReason.TokenExpired);
 
-        await _tokens.RevokeByIdAsync(refreshToken.Id);
+        var newToken = await _unitOfWorkFactory.ExecuteAsync(async uow =>
+        {
+            await _tokens.RevokeByIdAsync(refreshToken.Id, uow);
+            var generated = GenerateRefreshToken();
+            await _tokens.CreateAsync(user.Id, generated, DateTime.UtcNow.AddDays(RefreshTokenExpiryDays), uow);
+            return generated;
+        });
 
-        var newToken = GenerateRefreshToken();
-        await _tokens.CreateAsync(user.Id, newToken, DateTime.UtcNow.AddDays(RefreshTokenExpiryDays));
-
-        return (user, newToken);
+        return RefreshResult.Success(user, newToken);
     }
 
     public async Task<bool> LogoutAsync(string token) =>
