@@ -1,5 +1,5 @@
 using BookingSystem.API.Shared.Database;
-using Npgsql;
+using Dapper;
 
 namespace BookingSystem.API.Features.Auth;
 
@@ -14,48 +14,32 @@ public class RefreshTokenRepository : IRefreshTokenRepository
         await using var owned = uow is null ? await _db.OpenAsync() : null;
         var conn = uow?.Connection ?? owned!;
 
-        await using var cmd = new NpgsqlCommand(@"
+        await conn.ExecuteAsync(@"
             INSERT INTO refresh_tokens (user_id, token, expires_at)
-            VALUES (@userId, @token, @expiresAt)", conn, uow?.Transaction);
-
-        cmd.Parameters.AddWithValue("userId", userId);
-        cmd.Parameters.AddWithValue("token", token);
-        cmd.Parameters.AddWithValue("expiresAt", expiresAt);
-        await cmd.ExecuteNonQueryAsync();
+            VALUES (@userId, @token, @expiresAt)",
+            new { userId, token, expiresAt },
+            uow?.Transaction);
     }
 
     public async Task<(RefreshToken Token, User User)?> GetWithUserAsync(string token)
     {
         await using var conn = await _db.OpenAsync();
-        await using var cmd = new NpgsqlCommand(@"
-            SELECT rt.id, rt.expires_at, rt.is_revoked,
+        const string sql = @"
+            SELECT rt.id, rt.user_id, rt.token, rt.expires_at, rt.is_revoked, rt.created_at,
                    u.id, u.name, u.email, u.password_hash, u.phone, u.role, u.created_at
             FROM refresh_tokens rt
             JOIN users u ON u.id = rt.user_id
-            WHERE rt.token = @token", conn);
-        cmd.Parameters.AddWithValue("token", token);
+            WHERE rt.token = @token";
 
-        await using var reader = await cmd.ExecuteReaderAsync();
-        if (!await reader.ReadAsync()) return null;
+        // Multi-map: each row is split at the second "id" column into a RefreshToken and its User.
+        var rows = await conn.QueryAsync<RefreshToken, User, (RefreshToken Token, User User)>(
+            sql,
+            (rt, u) => (rt, u),
+            new { token },
+            splitOn: "id");
 
-        var refreshToken = new RefreshToken
-        {
-            Id        = reader.GetInt32(0),
-            ExpiresAt = reader.GetDateTime(1),
-            IsRevoked = reader.GetBoolean(2)
-        };
-        var user = new User
-        {
-            Id           = reader.GetInt32(3),
-            Name         = reader.GetString(4),
-            Email        = reader.GetString(5),
-            PasswordHash = reader.GetString(6),
-            Phone        = reader.IsDBNull(7) ? null : reader.GetString(7),
-            Role         = reader.GetString(8),
-            CreatedAt    = reader.GetDateTime(9)
-        };
-
-        return (refreshToken, user);
+        var list = rows.ToList();
+        return list.Count == 0 ? null : list[0];
     }
 
     public async Task RevokeByIdAsync(int id, IUnitOfWork? uow = null)
@@ -63,18 +47,18 @@ public class RefreshTokenRepository : IRefreshTokenRepository
         await using var owned = uow is null ? await _db.OpenAsync() : null;
         var conn = uow?.Connection ?? owned!;
 
-        await using var cmd = new NpgsqlCommand(
-            "UPDATE refresh_tokens SET is_revoked = TRUE WHERE id = @id", conn, uow?.Transaction);
-        cmd.Parameters.AddWithValue("id", id);
-        await cmd.ExecuteNonQueryAsync();
+        await conn.ExecuteAsync(
+            "UPDATE refresh_tokens SET is_revoked = TRUE WHERE id = @id",
+            new { id },
+            uow?.Transaction);
     }
 
     public async Task<bool> RevokeByTokenAsync(string token)
     {
         await using var conn = await _db.OpenAsync();
-        await using var cmd = new NpgsqlCommand(
-            "UPDATE refresh_tokens SET is_revoked = TRUE WHERE token = @token", conn);
-        cmd.Parameters.AddWithValue("token", token);
-        return await cmd.ExecuteNonQueryAsync() > 0;
+        var affected = await conn.ExecuteAsync(
+            "UPDATE refresh_tokens SET is_revoked = TRUE WHERE token = @token",
+            new { token });
+        return affected > 0;
     }
 }

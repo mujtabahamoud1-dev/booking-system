@@ -12,6 +12,9 @@ if (File.Exists(envFile))
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Map snake_case DB columns (e.g. password_hash) to PascalCase properties (PasswordHash).
+Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
