@@ -1,6 +1,46 @@
 @BookingSystem.API_HostAddress = http://localhost:5007
+@accessToken = paste-admin-access-token-here
 
-GET {{BookingSystem.API_HostAddress}}/weatherforecast/
+### List active services (public)
+GET {{BookingSystem.API_HostAddress}}/api/services
 Accept: application/json
+
+### List all services including inactive (admin)
+GET {{BookingSystem.API_HostAddress}}/api/services?includeInactive=true
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+
+### Get a single service (public)
+GET {{BookingSystem.API_HostAddress}}/api/services/1
+Accept: application/json
+
+### Create a service (admin)
+POST {{BookingSystem.API_HostAddress}}/api/services
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "Haircut",
+  "description": "Classic haircut and styling",
+  "duration": 30,
+  "price": 100.00
+}
+
+### Update a service (admin)
+PUT {{BookingSystem.API_HostAddress}}/api/services/1
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "Haircut",
+  "description": "Classic haircut and styling",
+  "duration": 45,
+  "price": 120.00,
+  "isActive": true
+}
+
+### Delete a service (admin)
+DELETE {{BookingSystem.API_HostAddress}}/api/services/1
+Authorization: Bearer {{accessToken}}
 
 ###
