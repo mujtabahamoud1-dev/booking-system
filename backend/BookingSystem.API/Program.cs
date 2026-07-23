@@ -44,10 +44,11 @@ builder.Services.AddSwaggerGen(c =>
 
 var connectionString = builder.Configuration.GetConnectionString("Default")!;
 builder.Services.AddSingleton(new DatabaseConnection(connectionString));
+builder.Services.AddScoped<DbSession>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
-builder.Services.AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();

@@ -12,19 +12,19 @@ public class AuthService : IAuthService
 {
     private readonly IUserRepository _users;
     private readonly IRefreshTokenRepository _tokens;
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly JwtSettings _jwt;
 
     public AuthService(
         IUserRepository users,
         IRefreshTokenRepository tokens,
-        IUnitOfWorkFactory unitOfWorkFactory,
+        IUnitOfWork unitOfWork,
         IOptions<JwtSettings> jwt)
     {
-        _users             = users;
-        _tokens            = tokens;
-        _unitOfWorkFactory = unitOfWorkFactory;
-        _jwt               = jwt.Value;
+        _users      = users;
+        _tokens     = tokens;
+        _unitOfWork = unitOfWork;
+        _jwt        = jwt.Value;
     }
 
     public async Task<User?> RegisterAsync(RegisterRequest req)
@@ -61,11 +61,11 @@ public class AuthService : IAuthService
         if (refreshToken.ExpiresAt < DateTime.UtcNow)
             return RefreshResult.Failure(RefreshFailureReason.TokenExpired);
 
-        var newToken = await _unitOfWorkFactory.ExecuteAsync(async uow =>
+        var newToken = await _unitOfWork.ExecuteAsync(async () =>
         {
-            await _tokens.RevokeByIdAsync(refreshToken.Id, uow);
+            await _tokens.RevokeByIdAsync(refreshToken.Id);
             var generated = GenerateRefreshToken();
-            await _tokens.CreateAsync(user.Id, generated, DateTime.UtcNow.AddDays(RefreshTokenExpiryDays), uow);
+            await _tokens.CreateAsync(user.Id, generated, DateTime.UtcNow.AddDays(RefreshTokenExpiryDays));
             return generated;
         });
 

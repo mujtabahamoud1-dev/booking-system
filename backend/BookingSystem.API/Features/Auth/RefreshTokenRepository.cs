@@ -5,24 +5,22 @@ namespace BookingSystem.API.Features.Auth;
 
 public class RefreshTokenRepository : IRefreshTokenRepository
 {
-    private readonly DatabaseConnection _db;
+    private readonly DbSession _session;
 
-    public RefreshTokenRepository(DatabaseConnection db) => _db = db;
+    public RefreshTokenRepository(DbSession session) => _session = session;
 
-    public async Task CreateAsync(int userId, string token, DateTime expiresAt, IUnitOfWork? uow = null)
+    public async Task CreateAsync(int userId, string token, DateTime expiresAt)
     {
-        await using var owned = uow is null ? await _db.OpenAsync() : null;
-        var conn = uow?.Connection ?? owned!;
-
+        var conn = await _session.GetConnectionAsync();
         await conn.ExecuteAsync(@"
             INSERT INTO refresh_tokens (user_id, token, expires_at)
             VALUES (@userId, @token, @expiresAt)",
-            new { userId, token, expiresAt }, uow?.Transaction);
+            new { userId, token, expiresAt });
     }
 
     public async Task<(RefreshToken Token, User User)?> GetWithUserAsync(string token)
     {
-        await using var conn = await _db.OpenAsync();
+        var conn = await _session.GetConnectionAsync();
         var rows = await conn.QueryAsync<RefreshToken, User, (RefreshToken Token, User User)>(@"
             SELECT rt.id, rt.expires_at, rt.is_revoked,
                    u.id, u.name, u.email, u.password_hash, u.phone, u.role, u.created_at
@@ -37,19 +35,17 @@ public class RefreshTokenRepository : IRefreshTokenRepository
         return row.Count == 0 ? null : row[0];
     }
 
-    public async Task RevokeByIdAsync(int id, IUnitOfWork? uow = null)
+    public async Task RevokeByIdAsync(int id)
     {
-        await using var owned = uow is null ? await _db.OpenAsync() : null;
-        var conn = uow?.Connection ?? owned!;
-
+        var conn = await _session.GetConnectionAsync();
         await conn.ExecuteAsync(
             "UPDATE refresh_tokens SET is_revoked = TRUE WHERE id = @id",
-            new { id }, uow?.Transaction);
+            new { id });
     }
 
     public async Task<bool> RevokeByTokenAsync(string token)
     {
-        await using var conn = await _db.OpenAsync();
+        var conn = await _session.GetConnectionAsync();
         return await conn.ExecuteAsync(
             "UPDATE refresh_tokens SET is_revoked = TRUE WHERE token = @token",
             new { token }) > 0;

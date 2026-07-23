@@ -5,13 +5,13 @@ namespace BookingSystem.API.Features.Auth;
 
 public class UserRepository : IUserRepository
 {
-    private readonly DatabaseConnection _db;
+    private readonly DbSession _session;
 
-    public UserRepository(DatabaseConnection db) => _db = db;
+    public UserRepository(DbSession session) => _session = session;
 
     public async Task<User?> GetByEmailAsync(string email)
     {
-        await using var conn = await _db.OpenAsync();
+        var conn = await _session.GetConnectionAsync();
         return await conn.QuerySingleOrDefaultAsync<User>(
             "SELECT id, name, email, password_hash, phone, role, created_at FROM users WHERE email = @email",
             new { email });
@@ -19,7 +19,7 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> CreateAsync(string name, string email, string passwordHash, string? phone)
     {
-        await using var conn = await _db.OpenAsync();
+        var conn = await _session.GetConnectionAsync();
         return await conn.QuerySingleOrDefaultAsync<User>(@"
             INSERT INTO users (name, email, password_hash, phone, role)
             VALUES (@name, @email, @passwordHash, @phone, 'client')

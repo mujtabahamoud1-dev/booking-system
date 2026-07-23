@@ -1,10 +1,11 @@
-using Npgsql;
-
 namespace BookingSystem.API.Shared.Database;
 
-public interface IUnitOfWork : IAsyncDisposable
+public interface IUnitOfWork
 {
-    NpgsqlConnection Connection { get; }
-    NpgsqlTransaction Transaction { get; }
-    Task CommitAsync();
+    /// <summary>
+    /// Runs <paramref name="work"/> inside a transaction on the request's shared
+    /// connection, committing on success and rolling back if it throws. Repositories
+    /// called within <paramref name="work"/> automatically take part — nothing is passed in.
+    /// </summary>
+    Task<T> ExecuteAsync<T>(Func<Task<T>> work);
 }

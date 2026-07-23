@@ -5,13 +5,13 @@ namespace BookingSystem.API.Features.Services;
 
 public class ServiceRepository : IServiceRepository
 {
-    private readonly DatabaseConnection _db;
+    private readonly DbSession _session;
 
-    public ServiceRepository(DatabaseConnection db) => _db = db;
+    public ServiceRepository(DbSession session) => _session = session;
 
     public async Task<List<Service>> GetAllAsync(bool includeInactive)
     {
-        await using var conn = await _db.OpenAsync();
+        var conn = await _session.GetConnectionAsync();
         var sql = "SELECT id, name, description, duration, price, is_active FROM services";
         if (!includeInactive)
             sql += " WHERE is_active = TRUE";
@@ -23,7 +23,7 @@ public class ServiceRepository : IServiceRepository
 
     public async Task<Service?> GetByIdAsync(int id)
     {
-        await using var conn = await _db.OpenAsync();
+        var conn = await _session.GetConnectionAsync();
         return await conn.QuerySingleOrDefaultAsync<Service>(
             "SELECT id, name, description, duration, price, is_active FROM services WHERE id = @id",
             new { id });
@@ -31,7 +31,7 @@ public class ServiceRepository : IServiceRepository
 
     public async Task<Service> CreateAsync(string name, string? description, int duration, decimal price)
     {
-        await using var conn = await _db.OpenAsync();
+        var conn = await _session.GetConnectionAsync();
         return await conn.QuerySingleAsync<Service>(@"
             INSERT INTO services (name, description, duration, price, is_active)
             VALUES (@name, @description, @duration, @price, TRUE)
@@ -41,7 +41,7 @@ public class ServiceRepository : IServiceRepository
 
     public async Task<Service?> UpdateAsync(int id, string name, string? description, int duration, decimal price, bool isActive)
     {
-        await using var conn = await _db.OpenAsync();
+        var conn = await _session.GetConnectionAsync();
         return await conn.QuerySingleOrDefaultAsync<Service>(@"
             UPDATE services
             SET name = @name, description = @description, duration = @duration, price = @price, is_active = @isActive
@@ -52,7 +52,7 @@ public class ServiceRepository : IServiceRepository
 
     public async Task<bool> DeleteAsync(int id)
     {
-        await using var conn = await _db.OpenAsync();
+        var conn = await _session.GetConnectionAsync();
         return await conn.ExecuteAsync("DELETE FROM services WHERE id = @id", new { id }) > 0;
     }
 }
