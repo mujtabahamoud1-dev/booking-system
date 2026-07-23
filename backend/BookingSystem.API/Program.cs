@@ -10,6 +10,9 @@ var envFile = Path.Combine(Directory.GetCurrentDirectory(), "..", ".env");
 if (File.Exists(envFile))
     DotNetEnv.Env.Load(envFile);
 
+// Map snake_case columns (e.g. password_hash) to PascalCase properties (PasswordHash).
+Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
