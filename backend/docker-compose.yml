@@ -36,5 +36,19 @@ services:
     ports:
       - "8080:8080"
 
+  web:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        # Served on host port 5173 so it matches the API's CORS allow-list.
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080/api}
+    container_name: booking_web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "5173:80"
+
 volumes:
   pg_data:
