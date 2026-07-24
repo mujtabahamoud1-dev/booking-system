@@ -54,14 +54,14 @@ public class BookingRepository : IBookingRepository
             new { slotId, bookingDate, cancelled = BookingStatus.Cancelled.ToDbValue() });
     }
 
-    public async Task<Booking> CreateAsync(int userId, int serviceId, int slotId, DateOnly bookingDate, string? notes)
+    public async Task<Booking> CreateAsync(Booking booking)
     {
         var conn = await _session.GetConnectionAsync();
         return await conn.QuerySingleAsync<Booking>($@"
             INSERT INTO bookings (user_id, service_id, slot_id, booking_date, notes)
-            VALUES (@userId, @serviceId, @slotId, @bookingDate, @notes)
+            VALUES (@UserId, @ServiceId, @SlotId, @BookingDate, @Notes)
             RETURNING {Columns}",
-            new { userId, serviceId, slotId, bookingDate, notes });
+            booking);
     }
 
     public async Task<Booking?> UpdateStatusAsync(int id, BookingStatus status)

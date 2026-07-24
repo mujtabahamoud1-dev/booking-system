@@ -29,25 +29,25 @@ public class ServiceRepository : IServiceRepository
             new { id });
     }
 
-    public async Task<Service> CreateAsync(string name, string? description, int duration, decimal price)
+    public async Task<Service> CreateAsync(Service service)
     {
         var conn = await _session.GetConnectionAsync();
         return await conn.QuerySingleAsync<Service>(@"
             INSERT INTO services (name, description, duration, price, is_active)
-            VALUES (@name, @description, @duration, @price, TRUE)
+            VALUES (@Name, @Description, @Duration, @Price, TRUE)
             RETURNING id, name, description, duration, price, is_active",
-            new { name, description, duration, price });
+            service);
     }
 
-    public async Task<Service?> UpdateAsync(int id, string name, string? description, int duration, decimal price, bool isActive)
+    public async Task<Service?> UpdateAsync(Service service)
     {
         var conn = await _session.GetConnectionAsync();
         return await conn.QuerySingleOrDefaultAsync<Service>(@"
             UPDATE services
-            SET name = @name, description = @description, duration = @duration, price = @price, is_active = @isActive
-            WHERE id = @id
+            SET name = @Name, description = @Description, duration = @Duration, price = @Price, is_active = @IsActive
+            WHERE id = @Id
             RETURNING id, name, description, duration, price, is_active",
-            new { id, name, description, duration, price, isActive });
+            service);
     }
 
     public async Task<bool> DeleteAsync(int id)

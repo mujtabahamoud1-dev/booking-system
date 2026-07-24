@@ -33,7 +33,13 @@ public class AuthService : IAuthService
             return null;
 
         var hash = BCrypt.Net.BCrypt.HashPassword(req.Password);
-        return await _users.CreateAsync(req.Name, req.Email, hash, req.Phone);
+        return await _users.CreateAsync(new User
+        {
+            Name         = req.Name,
+            Email        = req.Email,
+            PasswordHash = hash,
+            Phone        = req.Phone
+        });
     }
 
     public async Task<(User User, string RefreshToken)?> LoginAsync(LoginRequest req)

@@ -11,6 +11,6 @@ public interface IBookingRepository
     Task<SlotInfo?> LockSlotAsync(int slotId);
     Task<int> CountActiveForSlotAsync(int slotId, DateOnly bookingDate);
 
-    Task<Booking> CreateAsync(int userId, int serviceId, int slotId, DateOnly bookingDate, string? notes);
+    Task<Booking> CreateAsync(Booking booking);
     Task<Booking?> UpdateStatusAsync(int id, BookingStatus status);
 }

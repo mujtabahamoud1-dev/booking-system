@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using BookingSystem.API.Shared.Database;
 using BookingSystem.API.Features.Auth;
 using BookingSystem.API.Features.Services;
+using BookingSystem.API.Features.Availability;
 using BookingSystem.API.Features.Bookings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -15,6 +16,10 @@ if (File.Exists(envFile))
 
 // Map snake_case columns (e.g. password_hash) to PascalCase properties (PasswordHash).
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+
+// Dapper can't bind DateOnly/TimeOnly parameters on its own; these handlers bridge to Npgsql.
+Dapper.SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
+Dapper.SqlMapper.AddTypeHandler(new TimeOnlyTypeHandler());
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +64,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<IServiceService, ServiceService>();
+
+builder.Services.AddScoped<ISlotRepository, SlotRepository>();
+builder.Services.AddScoped<ISlotService, SlotService>();
 
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IBookingService, BookingService>();

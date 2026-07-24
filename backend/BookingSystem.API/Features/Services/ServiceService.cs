@@ -25,13 +25,27 @@ public class ServiceService : IServiceService
 
     public async Task<ServiceResponse> CreateAsync(CreateServiceRequest req)
     {
-        var service = await _services.CreateAsync(req.Name, req.Description, req.Duration, req.Price);
+        var service = await _services.CreateAsync(new Service
+        {
+            Name        = req.Name,
+            Description = req.Description,
+            Duration    = req.Duration,
+            Price       = req.Price
+        });
         return ServiceResponse.From(service);
     }
 
     public async Task<ServiceResponse?> UpdateAsync(int id, UpdateServiceRequest req)
     {
-        var service = await _services.UpdateAsync(id, req.Name, req.Description, req.Duration, req.Price, req.IsActive);
+        var service = await _services.UpdateAsync(new Service
+        {
+            Id          = id,
+            Name        = req.Name,
+            Description = req.Description,
+            Duration    = req.Duration,
+            Price       = req.Price,
+            IsActive    = req.IsActive
+        });
         return service is null ? null : ServiceResponse.From(service);
     }
 

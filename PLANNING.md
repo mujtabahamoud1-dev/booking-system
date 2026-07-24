@@ -17,10 +17,10 @@ portfolio piece to target Arabic and international remote companies.
 
 | Layer | Technology |
 |-------|-----------|
-| Backend | .NET 8 (ASP.NET Core Web API) |
+| Backend | .NET 10 (ASP.NET Core Web API) |
 | Frontend | Vue 3 + TypeScript |
 | Database | PostgreSQL |
-| ORM | Entity Framework Core |
+| Data Access | Dapper |
 | Auth | JWT + Refresh Tokens |
 | Styling | Tailwind CSS |
 | Containerization | Docker + Docker Compose |

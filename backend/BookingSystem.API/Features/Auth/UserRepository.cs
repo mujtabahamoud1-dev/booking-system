@@ -17,13 +17,13 @@ public class UserRepository : IUserRepository
             new { email });
     }
 
-    public async Task<User?> CreateAsync(string name, string email, string passwordHash, string? phone)
+    public async Task<User?> CreateAsync(User user)
     {
         var conn = await _session.GetConnectionAsync();
         return await conn.QuerySingleOrDefaultAsync<User>(@"
             INSERT INTO users (name, email, password_hash, phone, role)
-            VALUES (@name, @email, @passwordHash, @phone, 'client')
+            VALUES (@Name, @Email, @PasswordHash, @Phone, 'client')
             RETURNING id, name, email, password_hash, phone, role, created_at",
-            new { name, email, passwordHash, phone });
+            user);
     }
 }

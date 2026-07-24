@@ -34,7 +34,14 @@ public class BookingService : IBookingService
             if (taken >= slot.MaxBookings)
                 return CreateBookingResult.Fail(CreateBookingFailure.SlotFull);
 
-            var booking = await _bookings.CreateAsync(userId, req.ServiceId, req.SlotId, req.BookingDate, req.Notes);
+            var booking = await _bookings.CreateAsync(new Booking
+            {
+                UserId      = userId,
+                ServiceId   = req.ServiceId,
+                SlotId      = req.SlotId,
+                BookingDate = req.BookingDate,
+                Notes       = req.Notes
+            });
             return CreateBookingResult.Success(BookingResponse.From(booking));
         });
     }
