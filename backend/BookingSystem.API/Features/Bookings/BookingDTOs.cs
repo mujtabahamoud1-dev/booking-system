@@ -8,7 +8,7 @@ public record BookingResponse(
     int ServiceId,
     int SlotId,
     DateOnly BookingDate,
-    string Status,
+    BookingStatus Status,
     string? Notes,
     DateTime CreatedAt)
 {

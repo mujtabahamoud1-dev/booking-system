@@ -7,7 +7,7 @@ public class Booking
     public int ServiceId { get; set; }
     public int SlotId { get; set; }
     public DateOnly BookingDate { get; set; }
-    public string Status { get; set; } = default!;
+    public BookingStatus Status { get; set; }
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; }
 }

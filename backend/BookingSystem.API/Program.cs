@@ -1,4 +1,6 @@
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using BookingSystem.API.Shared.Database;
 using BookingSystem.API.Features.Auth;
 using BookingSystem.API.Features.Services;
@@ -16,7 +18,10 @@ Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+// Serialize enums as camelCase strings ("pending") rather than their numeric value,
+// so BookingStatus crosses the wire exactly as it did when it was a string.
+builder.Services.AddControllers().AddJsonOptions(options =>
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

@@ -59,13 +59,13 @@ public class BookingService : IBookingService
         if (booking.UserId != requestingUserId && !isAdmin)
             return ChangeStatusResult.Forbidden();
 
-        var updated = await _bookings.UpdateStatusAsync(id, "cancelled");
+        var updated = await _bookings.UpdateStatusAsync(id, BookingStatus.Cancelled);
         return ChangeStatusResult.Updated(BookingResponse.From(updated!));
     }
 
     public async Task<ChangeStatusResult> ConfirmAsync(int id)
     {
-        var updated = await _bookings.UpdateStatusAsync(id, "confirmed");
+        var updated = await _bookings.UpdateStatusAsync(id, BookingStatus.Confirmed);
         return updated is null
             ? ChangeStatusResult.NotFound()
             : ChangeStatusResult.Updated(BookingResponse.From(updated));

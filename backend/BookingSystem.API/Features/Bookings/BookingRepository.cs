@@ -50,8 +50,8 @@ public class BookingRepository : IBookingRepository
         var conn = await _session.GetConnectionAsync();
         return await conn.ExecuteScalarAsync<int>(@"
             SELECT COUNT(*) FROM bookings
-            WHERE slot_id = @slotId AND booking_date = @bookingDate AND status <> 'cancelled'",
-            new { slotId, bookingDate });
+            WHERE slot_id = @slotId AND booking_date = @bookingDate AND status <> @cancelled",
+            new { slotId, bookingDate, cancelled = BookingStatus.Cancelled.ToDbValue() });
     }
 
     public async Task<Booking> CreateAsync(int userId, int serviceId, int slotId, DateOnly bookingDate, string? notes)
@@ -64,12 +64,12 @@ public class BookingRepository : IBookingRepository
             new { userId, serviceId, slotId, bookingDate, notes });
     }
 
-    public async Task<Booking?> UpdateStatusAsync(int id, string status)
+    public async Task<Booking?> UpdateStatusAsync(int id, BookingStatus status)
     {
         var conn = await _session.GetConnectionAsync();
         return await conn.QuerySingleOrDefaultAsync<Booking>($@"
             UPDATE bookings SET status = @status WHERE id = @id
             RETURNING {Columns}",
-            new { id, status });
+            new { id, status = status.ToDbValue() });
     }
 }

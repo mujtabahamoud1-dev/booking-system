@@ -16,6 +16,9 @@ public static class DatabaseMigrator
             .PostgresqlDatabase(connectionString)
             .WithScriptsEmbeddedInAssembly(Assembly.GetExecutingAssembly())
             .WithTransactionPerScript()
+            // Scripts don't use DbUp's $var$ substitution, and disabling it stops the
+            // preprocessor from choking on literal '$' in the SQL (e.g. BCrypt $2a$ hashes).
+            .WithVariablesDisabled()
             .LogToConsole()
             .Build();
 
