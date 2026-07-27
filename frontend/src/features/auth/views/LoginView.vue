@@ -34,9 +34,14 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-  <div class="mx-auto max-w-sm">
-    <h1 class="mb-6 text-2xl font-bold text-slate-900">{{ t('auth.signIn') }}</h1>
-    <form class="space-y-4" @submit.prevent="submit">
+  <div class="mx-auto max-w-sm py-6">
+    <header class="mb-8">
+      <p class="u-label mb-3 text-brand">{{ t('common.brand.name') }}</p>
+      <h1 class="u-display text-3xl">{{ t('auth.signIn') }}</h1>
+      <p class="mt-3 text-sm text-ink-soft">{{ t('auth.signInHelp') }}</p>
+    </header>
+
+    <form class="space-y-5" @submit.prevent="submit">
       <AlertMessage v-if="error">{{ error }}</AlertMessage>
       <BaseInput
         v-model="email"
@@ -45,16 +50,23 @@ async function submit(): Promise<void> {
         required
         autocomplete="username"
       />
-      <BaseInput v-model="password" :label="t('common.fields.password')" type="password" required />
-      <BaseButton type="submit" :loading="submitting" class="w-full">{{
-        t('auth.signIn')
-      }}</BaseButton>
+      <BaseInput
+        v-model="password"
+        :label="t('common.fields.password')"
+        type="password"
+        required
+        autocomplete="current-password"
+      />
+      <BaseButton type="submit" :loading="submitting" class="w-full">
+        {{ t('auth.signIn') }}
+      </BaseButton>
     </form>
-    <p class="mt-4 text-center text-sm text-slate-500">
+
+    <p class="mt-8 border-t border-line pt-6 text-sm text-ink-soft">
       {{ t('auth.noAccount') }}
-      <RouterLink to="/register" class="font-medium text-indigo-600 hover:text-indigo-500">{{
-        t('auth.register')
-      }}</RouterLink>
+      <RouterLink to="/register" class="font-medium text-brand underline underline-offset-4">
+        {{ t('auth.register') }}
+      </RouterLink>
     </p>
   </div>
 </template>

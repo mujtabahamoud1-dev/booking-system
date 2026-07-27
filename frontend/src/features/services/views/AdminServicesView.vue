@@ -70,59 +70,122 @@ async function remove(service: Service): Promise<void> {
 
 <template>
   <section>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-slate-900">{{ t('services.adminTitle') }}</h1>
-      <BaseButton @click="openCreate">{{ t('services.newService') }}</BaseButton>
-    </div>
+    <header class="mb-8 flex flex-wrap items-end justify-between gap-5">
+      <div>
+        <h1 class="u-display text-3xl text-balance md:text-4xl">{{ t('services.adminTitle') }}</h1>
+        <p class="mt-3 text-ink-soft">{{ t('services.adminSubtitle') }}</p>
+      </div>
+      <BaseButton class="w-full sm:w-auto" @click="openCreate">
+        {{ t('services.newService') }}
+      </BaseButton>
+    </header>
 
-    <AlertMessage v-if="error" class="mb-4">{{ error }}</AlertMessage>
+    <AlertMessage v-if="error" class="mb-6">{{ error }}</AlertMessage>
 
     <LoadingSpinner v-if="loading" />
 
-    <div v-else class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <table class="min-w-full divide-y divide-slate-200 text-sm">
-        <thead class="bg-slate-50 text-start text-slate-500">
-          <tr>
-            <th class="px-4 py-3 font-medium">{{ t('common.fields.name') }}</th>
-            <th class="px-4 py-3 font-medium">{{ t('common.fields.duration') }}</th>
-            <th class="px-4 py-3 font-medium">{{ t('common.fields.price') }}</th>
-            <th class="px-4 py-3 font-medium">{{ t('common.fields.status') }}</th>
-            <th class="px-4 py-3"></th>
+    <!-- The desktop table becomes a record list on a phone rather than a
+         sideways scroll: name, what it costs you in time and money, and the two
+         actions, all reachable without moving the page. -->
+    <ul v-else class="border-t border-line md:hidden">
+      <li v-for="service in items" :key="service.id" class="border-b border-line py-4">
+        <div class="flex items-start justify-between gap-3">
+          <p class="min-w-0 font-medium">{{ service.name }}</p>
+          <span
+            class="u-label inline-flex shrink-0 items-center gap-1.5 rounded-sm px-2 py-1"
+            :class="service.isActive ? 'bg-brand-soft text-brand' : 'bg-ground text-ink-faint'"
+          >
+            <span
+              class="h-1.5 w-1.5 rounded-full"
+              :class="service.isActive ? 'bg-brand' : 'bg-ink-faint'"
+              aria-hidden="true"
+            />
+            {{ service.isActive ? t('services.statusActive') : t('services.statusInactive') }}
+          </span>
+        </div>
+
+        <p v-if="service.description" class="mt-1 text-sm text-ink-soft">
+          {{ service.description }}
+        </p>
+
+        <p class="u-data mt-2 text-sm text-ink-soft">
+          {{ t('common.minutesShort', { count: service.duration }) }}
+          <span class="mx-2 text-line" aria-hidden="true">/</span>
+          <span dir="ltr" class="inline-block">${{ service.price.toFixed(2) }}</span>
+        </p>
+
+        <div class="mt-1 flex items-center gap-5">
+          <button class="u-action u-label text-ink-soft" @click="openEdit(service)">
+            {{ t('common.actions.edit') }}
+          </button>
+          <button class="u-action u-label text-alert" @click="remove(service)">
+            {{ t('common.actions.delete') }}
+          </button>
+        </div>
+      </li>
+      <li
+        v-if="items.length === 0"
+        class="border-b border-line py-14 text-center text-sm text-ink-faint"
+      >
+        {{ t('services.adminEmpty') }}
+      </li>
+    </ul>
+
+    <div v-if="!loading" class="hidden border border-line bg-surface md:block">
+      <table class="min-w-full text-sm">
+        <thead>
+          <tr class="border-b border-line">
+            <th class="u-label px-5 py-4 text-start text-ink-faint">
+              {{ t('common.fields.name') }}
+            </th>
+            <th class="u-label px-5 py-4 text-start text-ink-faint">
+              {{ t('common.fields.duration') }}
+            </th>
+            <th class="u-label px-5 py-4 text-start text-ink-faint">
+              {{ t('common.fields.price') }}
+            </th>
+            <th class="u-label px-5 py-4 text-start text-ink-faint">
+              {{ t('common.fields.status') }}
+            </th>
+            <th class="px-5 py-4"><span class="sr-only">{{ t('common.actions.edit') }}</span></th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100">
-          <tr v-for="service in items" :key="service.id">
-            <td class="px-4 py-3">
-              <div class="font-medium text-slate-900">{{ service.name }}</div>
-              <div class="text-slate-400">
+        <tbody>
+          <tr v-for="service in items" :key="service.id" class="border-b border-line last:border-0">
+            <td class="px-5 py-4">
+              <div class="font-medium">{{ service.name }}</div>
+              <div class="mt-0.5 text-ink-faint">
                 {{ service.description || t('common.emptyValue') }}
               </div>
             </td>
-            <td class="px-4 py-3 text-slate-600">
+            <td class="u-data px-5 py-4 text-ink-soft">
               {{ t('common.minutesShort', { count: service.duration }) }}
             </td>
-            <td class="px-4 py-3 text-slate-600">${{ service.price.toFixed(2) }}</td>
-            <td class="px-4 py-3">
+            <td class="u-data px-5 py-4 text-ink-soft">
+              <span dir="ltr" class="inline-block">${{ service.price.toFixed(2) }}</span>
+            </td>
+            <td class="px-5 py-4">
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
-                :class="
-                  service.isActive
-                    ? 'bg-emerald-50 text-emerald-700 ring-emerald-200'
-                    : 'bg-slate-100 text-slate-500 ring-slate-200'
-                "
+                class="u-label inline-flex items-center gap-1.5 rounded-sm px-2 py-1"
+                :class="service.isActive ? 'bg-brand-soft text-brand' : 'bg-ground text-ink-faint'"
               >
+                <span
+                  class="h-1.5 w-1.5 rounded-full"
+                  :class="service.isActive ? 'bg-brand' : 'bg-ink-faint'"
+                  aria-hidden="true"
+                />
                 {{ service.isActive ? t('services.statusActive') : t('services.statusInactive') }}
               </span>
             </td>
-            <td class="px-4 py-3 text-end whitespace-nowrap">
+            <td class="px-5 py-4 text-end whitespace-nowrap">
               <button
-                class="font-medium text-indigo-600 hover:text-indigo-500"
+                class="u-action u-label text-ink-soft transition-colors hover:text-ink"
                 @click="openEdit(service)"
               >
                 {{ t('common.actions.edit') }}
               </button>
               <button
-                class="ms-3 font-medium text-rose-600 hover:text-rose-500"
+                class="u-action u-label ms-4 text-alert transition-opacity hover:opacity-70"
                 @click="remove(service)"
               >
                 {{ t('common.actions.delete') }}
@@ -130,7 +193,7 @@ async function remove(service: Service): Promise<void> {
             </td>
           </tr>
           <tr v-if="items.length === 0">
-            <td colspan="5" class="px-4 py-8 text-center text-slate-500">
+            <td colspan="5" class="px-5 py-16 text-center text-ink-faint">
               {{ t('services.adminEmpty') }}
             </td>
           </tr>

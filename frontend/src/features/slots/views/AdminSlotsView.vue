@@ -7,8 +7,10 @@ import { useSlotsStore } from '../store'
 import { shortTime, type Slot, type UpdateSlotRequest } from '../types'
 import { apiErrorMessage } from '@/shared/api/client'
 import SlotForm from '../components/SlotForm.vue'
+import WeekTrack from '../components/WeekTrack.vue'
 import BaseButton from '@/shared/components/BaseButton.vue'
 import BaseModal from '@/shared/components/BaseModal.vue'
+import BaseSelect from '@/shared/components/BaseSelect.vue'
 import AlertMessage from '@/shared/components/AlertMessage.vue'
 import LoadingSpinner from '@/shared/components/LoadingSpinner.vue'
 
@@ -19,6 +21,7 @@ const { loading } = storeToRefs(slotsStore)
 const { t } = useI18n()
 
 const selectedServiceId = ref<number | null>(null)
+const selectedSlotId = ref<number | null>(null)
 const showForm = ref(false)
 const editing = ref<Slot | null>(null)
 const submitting = ref(false)
@@ -28,6 +31,17 @@ const slots = computed(() =>
   selectedServiceId.value ? slotsStore.forService(selectedServiceId.value) : [],
 )
 
+const selectedSlot = computed(() => slots.value.find((s) => s.id === selectedSlotId.value) ?? null)
+
+const weeklyHours = computed(() => {
+  const minutes = slots.value.reduce((sum, slot) => {
+    const [sh, sm] = slot.startTime.split(':').map(Number)
+    const [eh, em] = slot.endTime.split(':').map(Number)
+    return sum + (eh * 60 + em - (sh * 60 + sm))
+  }, 0)
+  return Math.round((minutes / 60) * 10) / 10
+})
+
 onMounted(async () => {
   await servicesStore.load(true)
   if (services.value.length > 0) selectedServiceId.value = services.value[0].id
@@ -35,6 +49,7 @@ onMounted(async () => {
 
 // Reload slots whenever the chosen service changes.
 watch(selectedServiceId, (id) => {
+  selectedSlotId.value = null
   if (id) slotsStore.load(id)
 })
 
@@ -74,6 +89,7 @@ async function remove(slot: Slot): Promise<void> {
   error.value = null
   try {
     await slotsStore.remove(slot.id, selectedServiceId.value)
+    selectedSlotId.value = null
   } catch (e) {
     // 409 when the slot already has bookings.
     error.value = apiErrorMessage(e, t('slots.deleteFailed'))
@@ -83,77 +99,85 @@ async function remove(slot: Slot): Promise<void> {
 
 <template>
   <section>
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-      <h1 class="text-2xl font-bold text-slate-900">{{ t('slots.title') }}</h1>
-      <BaseButton :disabled="!selectedServiceId" @click="openCreate">{{
-        t('slots.newSlot')
-      }}</BaseButton>
+    <header class="mb-8">
+      <h1 class="u-display text-3xl text-balance md:text-4xl">{{ t('slots.title') }}</h1>
+      <p class="mt-3 text-ink-soft">{{ t('slots.subtitle') }}</p>
+    </header>
+
+    <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div class="w-full sm:max-w-xs">
+        <BaseSelect v-model="selectedServiceId" :label="t('common.fields.service')">
+          <option v-if="services.length === 0" :value="null">{{ t('slots.noServices') }}</option>
+          <option v-for="service in services" :key="service.id" :value="service.id">
+            {{ service.name }}
+          </option>
+        </BaseSelect>
+      </div>
+      <BaseButton :disabled="!selectedServiceId" class="w-full sm:w-auto" @click="openCreate">
+        {{ t('slots.newSlot') }}
+      </BaseButton>
     </div>
 
-    <label class="mb-6 block max-w-xs">
-      <span class="mb-1 block text-sm font-medium text-slate-700">{{
-        t('common.fields.service')
-      }}</span>
-      <select
-        v-model="selectedServiceId"
-        class="block w-full rounded-md border-0 px-3 py-2 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
-      >
-        <option v-if="services.length === 0" :value="null">{{ t('slots.noServices') }}</option>
-        <option v-for="service in services" :key="service.id" :value="service.id">
-          {{ service.name }}
-        </option>
-      </select>
-    </label>
-
-    <AlertMessage v-if="error" class="mb-4">{{ error }}</AlertMessage>
+    <AlertMessage v-if="error" class="mb-6">{{ error }}</AlertMessage>
 
     <LoadingSpinner v-if="loading" />
 
-    <div v-else class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <table class="min-w-full divide-y divide-slate-200 text-sm">
-        <thead class="bg-slate-50 text-start text-slate-500">
-          <tr>
-            <th class="px-4 py-3 font-medium">{{ t('slots.day') }}</th>
-            <th class="px-4 py-3 font-medium">{{ t('slots.time') }}</th>
-            <th class="px-4 py-3 font-medium">{{ t('slots.maxBookings') }}</th>
-            <th class="px-4 py-3"></th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100">
-          <tr v-for="slot in slots" :key="slot.id">
-            <td class="px-4 py-3 font-medium text-slate-900">
-              {{ t(`common.days.${slot.dayOfWeek}`) }}
-            </td>
-            <!-- Clock ranges stay left-to-right even in an RTL page. -->
-            <td class="px-4 py-3 text-slate-600">
-              <span dir="ltr" class="inline-block">
-                {{ shortTime(slot.startTime) }} – {{ shortTime(slot.endTime) }}
-              </span>
-            </td>
-            <td class="px-4 py-3 text-slate-600">{{ slot.maxBookings }}</td>
-            <td class="px-4 py-3 text-end whitespace-nowrap">
-              <button
-                class="font-medium text-indigo-600 hover:text-indigo-500"
-                @click="openEdit(slot)"
-              >
-                {{ t('common.actions.edit') }}
-              </button>
-              <button
-                class="ms-3 font-medium text-rose-600 hover:text-rose-500"
-                @click="remove(slot)"
-              >
-                {{ t('common.actions.delete') }}
-              </button>
-            </td>
-          </tr>
-          <tr v-if="slots.length === 0">
-            <td colspan="4" class="px-4 py-8 text-center text-slate-500">
-              {{ t('slots.empty') }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <template v-else>
+      <!-- Every weekday is shown, empty ones included: a gap in cover is the
+           thing you most need to notice here. -->
+      <div class="border border-line bg-surface p-4 sm:p-7">
+        <div class="mb-6 flex items-baseline justify-between gap-4">
+          <h2 class="u-label text-ink-faint">{{ t('slots.weekCover') }}</h2>
+          <p v-if="slots.length > 0" class="u-data text-xs text-ink-faint">
+            {{ t('slots.weeklyHours', { hours: weeklyHours }) }}
+          </p>
+        </div>
+
+        <p
+          v-if="slots.length === 0"
+          class="border border-dashed border-line px-6 py-12 text-center text-sm text-ink-faint"
+        >
+          {{ t('slots.empty') }}
+        </p>
+        <WeekTrack
+          v-else
+          :slots="slots"
+          :selected-id="selectedSlotId"
+          :group-label="t('slots.weekCover')"
+          show-empty-days
+          @select="selectedSlotId = $event.id"
+        />
+      </div>
+
+      <!-- Actions attach to the selected bar rather than repeating the whole
+           week as a table underneath it. -->
+      <div
+        v-if="selectedSlot"
+        class="mt-4 flex flex-wrap items-center justify-between gap-4 border border-line bg-brand-soft px-4 py-4 sm:px-5"
+      >
+        <p class="text-sm">
+          <span class="font-medium">{{ t(`common.days.${selectedSlot.dayOfWeek}`) }}</span>
+          <span class="u-data ms-3 text-ink-soft">
+            <span dir="ltr" class="inline-block"
+              >{{ shortTime(selectedSlot.startTime) }}–{{ shortTime(selectedSlot.endTime) }}</span
+            >
+            <span class="mx-2 text-line" aria-hidden="true">/</span>
+            {{ t('slots.capacityOf', { count: selectedSlot.maxBookings }) }}
+          </span>
+        </p>
+        <div class="flex w-full items-center gap-2 sm:w-auto">
+          <BaseButton variant="secondary" class="flex-1 sm:flex-none" @click="openEdit(selectedSlot)">
+            {{ t('common.actions.edit') }}
+          </BaseButton>
+          <BaseButton variant="danger" class="flex-1 sm:flex-none" @click="remove(selectedSlot)">
+            {{ t('common.actions.delete') }}
+          </BaseButton>
+        </div>
+      </div>
+      <p v-else-if="slots.length > 0" class="mt-4 text-sm text-ink-faint">
+        {{ t('slots.selectHint') }}
+      </p>
+    </template>
 
     <BaseModal
       v-if="showForm"

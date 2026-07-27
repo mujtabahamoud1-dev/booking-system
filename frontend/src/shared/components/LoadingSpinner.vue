@@ -7,11 +7,35 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div class="flex items-center justify-center gap-3 py-12 text-slate-500">
-    <svg class="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-    </svg>
-    <span class="text-sm">{{ label ?? t('common.loading') }}</span>
+  <!-- An indeterminate bar rather than a spinner: it echoes the week track, so
+       loading looks like part of the same system. -->
+  <div class="flex flex-col items-center gap-3 py-14" role="status">
+    <div class="track h-1 w-40 overflow-hidden rounded-full bg-line" aria-hidden="true">
+      <div class="bar h-full w-1/3 rounded-full bg-brand"></div>
+    </div>
+    <span class="u-label text-ink-faint">{{ label ?? t('common.loading') }}</span>
   </div>
 </template>
+
+<style scoped>
+@keyframes sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+.bar {
+  animation: sweep 1.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    animation: none;
+    width: 100%;
+    opacity: 0.5;
+  }
+}
+</style>

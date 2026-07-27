@@ -1,6 +1,42 @@
-@import 'tailwindcss';
+/* Latin faces carry a width contrast: Archivo runs expanded for display, and
+   Instrument Sans stays normal for body. Plex Mono is the "instrument readout"
+   used for every time, date, price and count. Plex Sans Arabic covers all three
+   roles in Arabic, where the width axis has no equivalent. */
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Instrument+Sans:wght@400..700&display=swap");
+@import "tailwindcss";
 
-/* App-wide base. Kept minimal; components lean on Tailwind utilities. */
+/* Atlas Physiotherapy — palette drawn from the treatment room (mineral wall
+   paint, paper on the table) and the resistance-band scale physios grade
+   strength by: green band = brand, yellow band = attention, red band =
+   destructive. Red is reserved for cancel/delete so it never competes with a
+   primary action. */
+@theme {
+  --color-ink: #14231d;
+  --color-ink-soft: #47574f;
+  --color-ink-faint: #64736b;
+
+  --color-ground: #e7ebe3;
+  --color-surface: #fbfcf8;
+  --color-line: #d3dacf;
+
+  --color-brand: #1f4d3d;
+  --color-brand-deep: #143329;
+  --color-brand-soft: #e0e9e1;
+
+  --color-signal: #c98a12;
+  --color-signal-ink: #7a5207;
+  --color-signal-soft: #f7edd7;
+
+  --color-alert: #a93b2b;
+  --color-alert-soft: #f6e4e0;
+
+  --font-display: "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-body:
+    "Instrument Sans", "IBM Plex Sans Arabic", ui-sans-serif, system-ui,
+    sans-serif;
+  --font-mono: "IBM Plex Mono", "IBM Plex Sans Arabic", ui-monospace, monospace;
+}
+
 html,
 body,
 #app {
@@ -8,13 +44,149 @@ body,
 }
 
 body {
-  @apply bg-slate-50 text-slate-800 antialiased;
+  @apply bg-ground font-body text-ink antialiased;
 }
 
-/* Arabic fallbacks appended to Tailwind's sans stack so RTL text picks a face
-   that actually has the glyphs instead of the browser's default serif. */
+/* Arabic has no width axis to play with, so the whole system collapses to one
+   family and leans on weight alone. Numerals stay in Plex Mono either way. */
 :root:lang(ar) body {
-  font-family:
-    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Noto Sans Arabic', 'Noto Naskh Arabic',
-    'Geeza Pro', 'Dubai', 'Tahoma', sans-serif;
+  --font-display: "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* --- type roles ------------------------------------------------------------
+   Display is set expanded and tight; the width is the personality, so it is
+   applied here once rather than re-declared per heading. */
+.u-display {
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+:root:lang(ar) .u-display {
+  font-stretch: normal;
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+
+/* Small caps-ish label used for eyebrows, table headers and field labels. */
+.u-label {
+  font-family: var(--font-display);
+  font-stretch: 112%;
+  font-weight: 600;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+:root:lang(ar) .u-label {
+  font-stretch: normal;
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 0.8125rem;
+}
+
+/* Every measured value — clock times, dates, money, counts, ids. Tabular so
+   figures stack in a column. */
+.u-data {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "zero" 1;
+}
+
+/* --- touch and small screens -----------------------------------------------
+   The page gutter also clears the notch when a phone is held in landscape.
+   Both insets are folded into both sides so the layout stays symmetrical
+   whichever way the device is rotated. */
+:root {
+  --gutter: max(1.25rem, env(safe-area-inset-left), env(safe-area-inset-right));
+}
+
+.u-gutter {
+  padding-inline: var(--gutter);
+}
+
+/* Pushes an element back out to the screen edges through the page gutter, for
+   bars that dock to the bottom of a phone. Confined below `sm` so the wide
+   layout's own margin utilities are never fighting it. */
+@media (width < 40rem) {
+  .u-bleed {
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+  }
+}
+
+/* Anything pinned to the bottom edge has to clear the home indicator. */
+.u-safe-bottom {
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+}
+
+/* Inline text actions — Edit, Delete, Confirm — are label-sized, which is
+   comfortable under a mouse and far below a usable touch target. Coarse
+   pointers get the full 44px box; fine pointers keep the tight table rhythm
+   these were set on. Input method, not screen width, decides. */
+.u-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (pointer: coarse) {
+  .u-action {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+}
+
+/* --- quality floor --------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Page-load stagger for card grids. Index drives the delay via --i. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.u-rise {
+  animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+
+/* Slot bars open from their starting edge — a range of motion widening. */
+@keyframes extend {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.u-extend {
+  transform-origin: left center;
+  animation: extend 0.45s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 40ms);
 }

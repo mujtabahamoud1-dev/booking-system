@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { servicesApi } from '@/features/services/api'
 import type { Service } from '@/features/services/types'
@@ -8,6 +8,7 @@ import { slotsApi } from '@/features/slots/api'
 import { shortTime, type Slot } from '@/features/slots/types'
 import { useBookingsStore } from '../store'
 import { apiErrorMessage } from '@/shared/api/client'
+import WeekTrack from '@/features/slots/components/WeekTrack.vue'
 import BaseInput from '@/shared/components/BaseInput.vue'
 import BaseButton from '@/shared/components/BaseButton.vue'
 import AlertMessage from '@/shared/components/AlertMessage.vue'
@@ -16,7 +17,7 @@ import LoadingSpinner from '@/shared/components/LoadingSpinner.vue'
 const props = defineProps<{ serviceId: string }>()
 const router = useRouter()
 const bookings = useBookingsStore()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const service = ref<Service | null>(null)
 const slots = ref<Slot[]>([])
@@ -32,6 +33,13 @@ const id = Number(props.serviceId)
 
 const selectedSlot = computed(() => slots.value.find((s) => s.id === selectedSlotId.value) ?? null)
 
+// toISOString() reports UTC, which rolls the date over for anyone east or west
+// of it. Dates here are calendar dates, so format them locally.
+const toISODate = (d: Date): string =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+const today = toISODate(new Date())
+
 // The API rejects a date whose weekday differs from the slot's; catch it early.
 const dayMismatch = computed(() => {
   if (!selectedSlot.value || !bookingDate.value) return false
@@ -45,7 +53,30 @@ const dateError = computed(() =>
     : null,
 )
 
-const today = new Date().toISOString().slice(0, 10)
+// Once a slot is chosen its weekday is fixed, so the next six occurrences of
+// that weekday cover almost every booking as one tap — and can't be wrong.
+// The date field stays available underneath for anything further out.
+const upcomingDates = computed(() => {
+  if (!selectedSlot.value) return []
+  const out: string[] = []
+  const cursor = new Date()
+  cursor.setHours(0, 0, 0, 0)
+  while (out.length < 6) {
+    if (cursor.getDay() === selectedSlot.value.dayOfWeek) out.push(toISODate(cursor))
+    cursor.setDate(cursor.getDate() + 1)
+  }
+  return out
+})
+
+const dateFormat = computed(
+  () => new Intl.DateTimeFormat(locale.value, { day: 'numeric', month: 'short' }),
+)
+
+const formatDate = (iso: string): string => dateFormat.value.format(new Date(`${iso}T00:00:00`))
+
+const canSubmit = computed(
+  () => selectedSlotId.value !== null && bookingDate.value !== '' && !dayMismatch.value,
+)
 
 onMounted(async () => {
   try {
@@ -59,6 +90,12 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+function selectSlot(slot: Slot): void {
+  selectedSlotId.value = slot.id
+  // A date already picked for a different weekday would now be invalid.
+  if (dayMismatch.value) bookingDate.value = ''
+}
 
 async function submit(): Promise<void> {
   if (!selectedSlotId.value) {
@@ -88,75 +125,134 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-  <section class="mx-auto max-w-lg">
+  <section>
     <LoadingSpinner v-if="loading" />
 
     <template v-else-if="service">
-      <h1 class="text-2xl font-bold text-slate-900">
-        {{ t('bookings.bookTitle', { name: service.name }) }}
-      </h1>
-      <p class="mt-1 text-slate-500">
-        {{ t('common.minutesShort', { count: service.duration }) }} · ${{
-          service.price.toFixed(2)
-        }}
-      </p>
+      <RouterLink
+        to="/"
+        class="u-action u-label mb-4 gap-2 text-ink-faint transition-colors hover:text-ink sm:mb-6"
+      >
+        <span class="inline-block rtl:rotate-180" aria-hidden="true">←</span>
+        {{ t('bookings.backToServices') }}
+      </RouterLink>
 
-      <form class="mt-6 space-y-5" @submit.prevent="submit">
+      <header class="mb-8 border-b border-line pb-6 sm:mb-10 sm:pb-8">
+        <h1 class="u-display text-3xl text-balance md:text-4xl">{{ service.name }}</h1>
+        <p class="u-data mt-3 text-sm text-ink-soft">
+          {{ t('common.minutesShort', { count: service.duration }) }}
+          <span class="mx-2 text-line" aria-hidden="true">/</span>
+          <!-- Currency is written prefix-first, so it stays LTR like the clock. -->
+          <span dir="ltr" class="inline-block">${{ service.price.toFixed(2) }}</span>
+        </p>
+      </header>
+
+      <form class="space-y-10" @submit.prevent="submit">
         <AlertMessage v-if="error">{{ error }}</AlertMessage>
 
-        <div>
-          <span class="mb-2 block text-sm font-medium text-slate-700">{{
-            t('bookings.chooseSlot')
-          }}</span>
-          <p v-if="slots.length === 0" class="text-sm text-slate-500">
+        <!-- Step one: the week's cover, drawn against a clock. -->
+        <fieldset>
+          <legend class="u-label mb-1 text-brand">{{ t('bookings.stepTime') }}</legend>
+          <p class="mb-6 text-sm text-ink-soft">{{ t('bookings.stepTimeHelp') }}</p>
+
+          <p
+            v-if="slots.length === 0"
+            class="border border-dashed border-line px-6 py-12 text-center text-sm text-ink-faint"
+          >
             {{ t('bookings.noSlots') }}
           </p>
-          <div class="space-y-2">
-            <label
-              v-for="slot in slots"
-              :key="slot.id"
-              class="flex cursor-pointer items-center gap-3 rounded-md border p-3 text-sm"
+          <WeekTrack
+            v-else
+            :slots="slots"
+            :selected-id="selectedSlotId"
+            :group-label="t('bookings.chooseSlot')"
+            @select="selectSlot"
+          />
+        </fieldset>
+
+        <!-- Step two appears only once a slot fixes the weekday. -->
+        <fieldset v-if="selectedSlot">
+          <legend class="u-label mb-1 text-brand">{{ t('bookings.stepDate') }}</legend>
+          <p class="mb-6 text-sm text-ink-soft">
+            {{ t('bookings.stepDateHelp', { day: t(`common.days.${selectedSlot.dayOfWeek}`) }) }}
+          </p>
+
+          <div class="flex flex-wrap gap-2" role="radiogroup" :aria-label="t('bookings.stepDate')">
+            <button
+              v-for="date in upcomingDates"
+              :key="date"
+              type="button"
+              role="radio"
+              :aria-checked="bookingDate === date"
+              class="u-action u-data rounded-sm px-3.5 py-2 text-sm transition-colors"
               :class="
-                selectedSlotId === slot.id
-                  ? 'border-indigo-500 bg-indigo-50'
-                  : 'border-slate-200 hover:bg-slate-50'
+                bookingDate === date
+                  ? 'bg-brand text-surface'
+                  : 'bg-surface text-ink ring-1 ring-inset ring-line hover:bg-brand-soft'
               "
+              @click="bookingDate = date"
             >
-              <input v-model="selectedSlotId" type="radio" :value="slot.id" class="h-4 w-4" />
-              <span class="font-medium text-slate-800">{{
-                t(`common.days.${slot.dayOfWeek}`)
-              }}</span>
-              <!-- Clock ranges stay left-to-right even in an RTL page. -->
-              <span dir="ltr" class="text-slate-500"
-                >{{ shortTime(slot.startTime) }} – {{ shortTime(slot.endTime) }}</span
-              >
-            </label>
+              {{ formatDate(date) }}
+            </button>
           </div>
-        </div>
 
-        <BaseInput
-          v-model="bookingDate"
-          :label="t('common.fields.date')"
-          type="date"
-          :min="today"
-          required
-          :error="dateError"
-        />
+          <details class="mt-5">
+            <!-- Padded rather than given `u-action`, which would switch the
+                 summary off `display: list-item` and take its marker with it. -->
+            <summary class="u-label cursor-pointer py-3 text-ink-faint hover:text-ink">
+              {{ t('bookings.otherDate') }}
+            </summary>
+            <div class="mt-2 max-w-full sm:max-w-56">
+              <BaseInput
+                v-model="bookingDate"
+                :label="t('common.fields.date')"
+                type="date"
+                :min="today"
+                :error="dateError"
+              />
+            </div>
+          </details>
+        </fieldset>
 
-        <BaseInput
-          v-model="notes"
-          :label="t('common.fields.notes')"
-          :placeholder="t('common.fields.optional')"
-        />
+        <fieldset v-if="selectedSlot" class="max-w-lg">
+          <legend class="u-label mb-1 text-brand">{{ t('bookings.stepNotes') }}</legend>
+          <p class="mb-4 text-sm text-ink-soft">{{ t('bookings.stepNotesHelp') }}</p>
+          <BaseInput
+            v-model="notes"
+            :label="t('common.fields.notes')"
+            hide-label
+            :placeholder="t('bookings.notesPlaceholder')"
+          />
+        </fieldset>
 
-        <BaseButton
-          type="submit"
-          :loading="submitting"
-          :disabled="slots.length === 0"
-          class="w-full"
+        <!-- What you are about to book, spelled out before you commit. On a
+             phone this is the one control the whole page exists for, and the
+             form is long enough to scroll it away, so it docks to the bottom
+             edge instead of waiting at the end. -->
+        <div
+          class="border-t border-line pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:static sm:bg-transparent sm:pt-8 sm:pb-0 sm:backdrop-blur-none"
+          :class="selectedSlot ? 'u-bleed sticky bottom-0 bg-ground/95 backdrop-blur-md' : ''"
         >
-          {{ t('bookings.confirmBooking') }}
-        </BaseButton>
+          <p v-if="canSubmit && selectedSlot" class="mb-3 text-sm text-ink-soft sm:mb-5">
+            {{ t('bookings.summaryLead') }}
+            <span class="u-data text-ink">
+              {{ formatDate(bookingDate) }},
+              <span dir="ltr" class="inline-block"
+                >{{ shortTime(selectedSlot.startTime) }}–{{
+                  shortTime(selectedSlot.endTime)
+                }}</span
+              >
+            </span>
+          </p>
+          <BaseButton
+            type="submit"
+            :loading="submitting"
+            :disabled="!canSubmit"
+            class="w-full sm:w-auto"
+          >
+            {{ t('bookings.confirmBooking') }}
+          </BaseButton>
+        </div>
       </form>
     </template>
 

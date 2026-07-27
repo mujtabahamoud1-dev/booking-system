@@ -30,7 +30,7 @@ function submit(): void {
 </script>
 
 <template>
-  <form class="space-y-4" @submit.prevent="submit">
+  <form class="space-y-5" @submit.prevent="submit">
     <BaseInput v-model="name" :label="t('common.fields.name')" required />
     <BaseInput
       v-model="description"
@@ -54,14 +54,20 @@ function submit(): void {
         required
       />
     </div>
-    <label v-if="service" class="flex items-center gap-2 text-sm text-slate-700">
-      <input v-model="isActive" type="checkbox" class="h-4 w-4 rounded border-slate-300" />
-      {{ t('common.fields.active') }}
+
+    <label v-if="service" class="flex min-h-11 items-center gap-2.5 text-sm">
+      <input
+        v-model="isActive"
+        type="checkbox"
+        class="h-4 w-4 rounded-[2px] border-line text-brand accent-brand"
+      />
+      <span>{{ t('services.activeHelp') }}</span>
     </label>
-    <div class="flex justify-end gap-2 pt-2">
-      <BaseButton variant="secondary" @click="emit('cancel')">{{
-        t('common.actions.cancel')
-      }}</BaseButton>
+
+    <div class="flex justify-end gap-2 border-t border-line pt-5">
+      <BaseButton variant="secondary" @click="emit('cancel')">
+        {{ t('common.actions.cancel') }}
+      </BaseButton>
       <BaseButton type="submit" :loading="submitting">
         {{ service ? t('common.actions.saveChanges') : t('common.actions.create') }}
       </BaseButton>

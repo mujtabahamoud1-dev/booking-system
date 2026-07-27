@@ -6,18 +6,24 @@ defineProps<{ status: BookingStatus }>()
 
 const { t } = useI18n()
 
+// Amber and green are the yellow and green resistance bands; cancelled drops out
+// of the colour system entirely, which is the point.
 const styles: Record<BookingStatus, string> = {
-  pending: 'bg-amber-50 text-amber-700 ring-amber-200',
-  confirmed: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  cancelled: 'bg-slate-100 text-slate-500 ring-slate-200',
+  pending: 'bg-signal-soft text-signal-ink',
+  confirmed: 'bg-brand-soft text-brand',
+  cancelled: 'bg-ground text-ink-faint',
+}
+
+const dots: Record<BookingStatus, string> = {
+  pending: 'bg-signal',
+  confirmed: 'bg-brand',
+  cancelled: 'bg-ink-faint',
 }
 </script>
 
 <template>
-  <span
-    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ring-1 ring-inset"
-    :class="styles[status]"
-  >
+  <span class="u-label inline-flex items-center gap-1.5 rounded-sm px-2 py-1" :class="styles[status]">
+    <span class="h-1.5 w-1.5 rounded-full" :class="dots[status]" aria-hidden="true" />
     {{ t(`bookings.status.${status}`) }}
   </span>
 </template>

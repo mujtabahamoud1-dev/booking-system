@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { DAY_INDEXES, shortTime, type Slot, type UpdateSlotRequest } from '../types'
 import BaseInput from '@/shared/components/BaseInput.vue'
+import BaseSelect from '@/shared/components/BaseSelect.vue'
 import BaseButton from '@/shared/components/BaseButton.vue'
 
 const props = defineProps<{ slot: Slot | null; submitting: boolean }>()
@@ -27,22 +28,18 @@ function submit(): void {
 </script>
 
 <template>
-  <form class="space-y-4" @submit.prevent="submit">
-    <label class="block">
-      <span class="mb-1 block text-sm font-medium text-slate-700">{{ t('slots.dayOfWeek') }}</span>
-      <select
-        v-model="dayOfWeek"
-        class="block w-full rounded-md border-0 px-3 py-2 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
-      >
-        <option v-for="index in DAY_INDEXES" :key="index" :value="index">
-          {{ t(`common.days.${index}`) }}
-        </option>
-      </select>
-    </label>
+  <form class="space-y-5" @submit.prevent="submit">
+    <BaseSelect v-model="dayOfWeek" :label="t('slots.dayOfWeek')">
+      <option v-for="index in DAY_INDEXES" :key="index" :value="index">
+        {{ t(`common.days.${index}`) }}
+      </option>
+    </BaseSelect>
+
     <div class="grid grid-cols-2 gap-4">
       <BaseInput v-model="startTime" :label="t('slots.startTime')" type="time" required />
       <BaseInput v-model="endTime" :label="t('slots.endTime')" type="time" required />
     </div>
+
     <BaseInput
       v-model="maxBookings"
       :label="t('slots.maxBookings')"
@@ -50,10 +47,11 @@ function submit(): void {
       min="1"
       required
     />
-    <div class="flex justify-end gap-2 pt-2">
-      <BaseButton variant="secondary" @click="emit('cancel')">{{
-        t('common.actions.cancel')
-      }}</BaseButton>
+
+    <div class="flex justify-end gap-2 border-t border-line pt-5">
+      <BaseButton variant="secondary" @click="emit('cancel')">
+        {{ t('common.actions.cancel') }}
+      </BaseButton>
       <BaseButton type="submit" :loading="submitting">
         {{ slot ? t('common.actions.saveChanges') : t('common.actions.create') }}
       </BaseButton>

@@ -9,11 +9,13 @@ withDefaults(
   { variant: 'primary', type: 'button', disabled: false, loading: false },
 )
 
+// Red is reserved for destruction, so `danger` is the only variant that gets it
+// and `primary` never has to compete with it for attention.
 const styles: Record<string, string> = {
-  primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600',
-  secondary: 'bg-white text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50',
-  danger: 'bg-rose-600 text-white hover:bg-rose-700 focus-visible:outline-rose-600',
-  ghost: 'text-slate-600 hover:bg-slate-100',
+  primary: 'bg-brand text-surface hover:bg-brand-deep',
+  secondary: 'bg-surface text-ink ring-1 ring-inset ring-line hover:bg-ground',
+  danger: 'bg-alert text-surface hover:bg-alert/90',
+  ghost: 'text-ink-soft hover:bg-ground hover:text-ink',
 }
 </script>
 
@@ -21,12 +23,12 @@ const styles: Record<string, string> = {
   <button
     :type="type"
     :disabled="disabled || loading"
-    class="inline-flex items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-semibold shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    class="u-action u-label gap-2 rounded-sm px-4 py-2.5 transition-colors disabled:cursor-not-allowed disabled:opacity-45"
     :class="styles[variant]"
   >
     <svg
       v-if="loading"
-      class="h-4 w-4 animate-spin"
+      class="h-3.5 w-3.5 animate-spin"
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden="true"
