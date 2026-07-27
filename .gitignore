@@ -19,3 +19,10 @@
 # OS
 .DS_Store
 Thumbs.db
+
+# Local agent/tooling state
+.claude/settings.local.json
+.claude/worktrees/
+
+# Stray root lockfile — npm runs from frontend/, which has its own
+/package-lock.json
