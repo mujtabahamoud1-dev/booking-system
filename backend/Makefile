@@ -1,4 +1,4 @@
-.PHONY: up down build rebuild logs ps migrate shell-db
+.PHONY: up down build rebuild restart logs ps migrate shell-db
 
 up:
 	docker compose up -d
@@ -11,6 +11,11 @@ build:
 
 rebuild:
 	docker compose down && docker compose build --no-cache && docker compose up -d
+
+restart:
+	docker compose down
+	docker compose build
+	docker compose up -d
 
 logs:
 	docker compose logs -f

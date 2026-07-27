@@ -1,3 +1,5 @@
+name: booking-system
+
 services:
   db:
     image: postgres:18-alpine
@@ -10,7 +12,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U bookinguser -d bookingdb"]
       interval: 10s
@@ -26,13 +28,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # .NET reads "__" as its config-section separator, so Jwt__Secret in .env
+    # becomes Jwt:Secret. env_file passes those names through untouched --
+    # unlike an "environment:" block, which would need ${...} interpolation
+    # and a second, differently-named copy of every key.
+    env_file:
+      - .env
     environment:
+      # Overrides the .env copy, which points at localhost for running the
+      # API outside Docker. "environment" outranks "env_file".
       ConnectionStrings__Default: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
-      Jwt__Secret: ${JWT_SECRET}
-      Jwt__Issuer: ${JWT_ISSUER}
-      Jwt__Audience: ${JWT_AUDIENCE}
-      Jwt__AccessTokenExpiryMinutes: ${JWT_ACCESS_EXPIRY_MINUTES}
-      Jwt__RefreshTokenExpiryDays: ${JWT_REFRESH_EXPIRY_DAYS}
     ports:
       - "8080:8080"
 
