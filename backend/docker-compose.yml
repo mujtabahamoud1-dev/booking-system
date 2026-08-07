@@ -10,7 +10,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      # Host 5433 keeps this out of the way of a natively-installed Postgres,
+      # which claims 127.0.0.1:5432 and would otherwise shadow the container.
+      - "5433:5432"
     volumes:
       - pg_data:/var/lib/postgresql
     healthcheck:
@@ -19,41 +21,41 @@ services:
       timeout: 5s
       retries: 5
 
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: booking_api
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    # .NET reads "__" as its config-section separator, so Jwt__Secret in .env
-    # becomes Jwt:Secret. env_file passes those names through untouched --
-    # unlike an "environment:" block, which would need ${...} interpolation
-    # and a second, differently-named copy of every key.
-    env_file:
-      - .env
-    environment:
-      # Overrides the .env copy, which points at localhost for running the
-      # API outside Docker. "environment" outranks "env_file".
-      ConnectionStrings__Default: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
-    ports:
-      - "8080:8080"
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: booking_api
+  #   restart: unless-stopped
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   # .NET reads "__" as its config-section separator, so Jwt__Secret in .env
+  #   # becomes Jwt:Secret. env_file passes those names through untouched --
+  #   # unlike an "environment:" block, which would need ${...} interpolation
+  #   # and a second, differently-named copy of every key.
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     # Overrides the .env copy, which points at localhost for running the
+  #     # API outside Docker. "environment" outranks "env_file".
+  #     ConnectionStrings__Default: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+  #   ports:
+  #     - "8080:8080"
 
-  web:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
-      args:
-        # Served on host port 5173 so it matches the API's CORS allow-list.
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080/api}
-    container_name: booking_web
-    restart: unless-stopped
-    depends_on:
-      - api
-    ports:
-      - "5173:80"
+  # web:
+  #   build:
+  #     context: ../frontend
+  #     dockerfile: Dockerfile
+  #     args:
+  #       # Served on host port 5173 so it matches the API's CORS allow-list.
+  #       VITE_API_URL: ${VITE_API_URL:-http://localhost:8080/api}
+  #   container_name: booking_web
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - api
+  #   ports:
+  #     - "5173:80"
 
 volumes:
   pg_data:

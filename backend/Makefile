@@ -1,4 +1,7 @@
-.PHONY: up down build rebuild restart logs ps migrate shell-db
+.PHONY: dev up down build rebuild restart logs ps migrate shell-db
+
+dev:
+	dotnet run --project BookingSystem.API --launch-profile http
 
 up:
 	docker compose up -d
