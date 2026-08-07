@@ -33,7 +33,7 @@ const toMinutes = (time: string): number => {
 // clinic open 09:00–17:00 fills the width instead of hiding in the middle.
 // Padded out to whole hours, and never narrower than six so one short slot
 // doesn't render as a full-width bar.
-const window = computed(() => {
+const axis = computed(() => {
   if (props.slots.length === 0) return { from: 8 * 60, to: 18 * 60 }
 
   let from = Math.floor(Math.min(...props.slots.map((s) => toMinutes(s.startTime))) / 60) * 60
@@ -49,14 +49,14 @@ const window = computed(() => {
   return { from, to }
 })
 
-const span = computed(() => window.value.to - window.value.from)
+const span = computed(() => axis.value.to - axis.value.from)
 
 // Hour ticks thin out on a long axis so the labels never collide.
 const ticks = computed(() => {
   const step = span.value > 8 * 60 ? 120 : 60
   const out: { at: number; label: string }[] = []
-  for (let m = window.value.from; m <= window.value.to; m += step) {
-    out.push({ at: ((m - window.value.from) / span.value) * 100, label: hourLabel(m) })
+  for (let m = axis.value.from; m <= axis.value.to; m += step) {
+    out.push({ at: ((m - axis.value.from) / span.value) * 100, label: hourLabel(m) })
   }
   return out
 })
@@ -89,8 +89,8 @@ const rows = computed(() =>
 
 // Percentage geometry, clamped so a slot reaching past the axis still reads.
 function geometry(slot: Slot): { start: number; width: number } {
-  const start = Math.max(0, ((toMinutes(slot.startTime) - window.value.from) / span.value) * 100)
-  const end = Math.min(100, ((toMinutes(slot.endTime) - window.value.from) / span.value) * 100)
+  const start = Math.max(0, ((toMinutes(slot.startTime) - axis.value.from) / span.value) * 100)
+  const end = Math.min(100, ((toMinutes(slot.endTime) - axis.value.from) / span.value) * 100)
   return { start, width: Math.max(end - start, 0.5) }
 }
 
@@ -116,8 +116,8 @@ function label(slot: Slot): string {
         class="u-data mb-3 flex justify-between text-[0.625rem] text-ink-faint"
         aria-hidden="true"
       >
-        <span>{{ hourLabel(window.from) }}</span>
-        <span>{{ hourLabel(window.to) }}</span>
+        <span>{{ hourLabel(axis.from) }}</span>
+        <span>{{ hourLabel(axis.to) }}</span>
       </p>
 
       <div
@@ -209,7 +209,11 @@ function label(slot: Slot): string {
             aria-hidden="true"
           />
 
-          <p v-if="row.lanes.length === 0" class="relative flex h-8 items-center text-xs text-ink-faint">
+          <p
+            v-if="row.lanes.length === 0"
+            dir="auto"
+            class="relative flex h-8 items-center px-2 text-xs text-ink-faint"
+          >
             {{ t('slots.dayClosed') }}
           </p>
 
