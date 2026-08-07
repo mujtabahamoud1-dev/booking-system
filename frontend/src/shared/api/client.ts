@@ -3,7 +3,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 // The one axios instance every feature's api.ts talks through — the frontend
 // analogue of the backend's DbSession: a single shared connection to the API.
 // withCredentials is required so the httpOnly refresh_token cookie rides along.
-const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:8080/api";
+const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:5007/api";
 
 export const api = axios.create({
   baseURL,
