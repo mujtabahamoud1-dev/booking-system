@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useServicesStore } from '../store'
 import type { Service, UpdateServiceRequest } from '../types'
 import { apiErrorMessage } from '@/shared/api/client'
+import { useConfirm } from '@/shared/composables/useConfirm'
 import ServiceForm from '../components/ServiceForm.vue'
 import BaseButton from '@/shared/components/BaseButton.vue'
 import BaseModal from '@/shared/components/BaseModal.vue'
@@ -14,6 +15,7 @@ import LoadingSpinner from '@/shared/components/LoadingSpinner.vue'
 const store = useServicesStore()
 const { items, loading } = storeToRefs(store)
 const { t } = useI18n()
+const { confirm } = useConfirm()
 
 const showForm = ref(false)
 const editing = ref<Service | null>(null)
@@ -57,7 +59,12 @@ async function save(payload: UpdateServiceRequest): Promise<void> {
 }
 
 async function remove(service: Service): Promise<void> {
-  if (!confirm(t('services.confirmDelete', { name: service.name }))) return
+  const ok = await confirm({
+    message: t('services.confirmDelete', { name: service.name }),
+    confirmLabel: t('common.actions.delete'),
+  })
+  if (!ok) return
+
   error.value = null
   try {
     await store.remove(service.id)

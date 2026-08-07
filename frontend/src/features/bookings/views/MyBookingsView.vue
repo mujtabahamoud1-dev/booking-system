@@ -7,6 +7,7 @@ import { useBookingsStore } from '../store'
 import { useServicesStore } from '@/features/services/store'
 import type { Booking } from '../types'
 import { apiErrorMessage } from '@/shared/api/client'
+import { useConfirm } from '@/shared/composables/useConfirm'
 import StatusBadge from '../components/StatusBadge.vue'
 import AlertMessage from '@/shared/components/AlertMessage.vue'
 import LoadingSpinner from '@/shared/components/LoadingSpinner.vue'
@@ -15,6 +16,7 @@ const bookings = useBookingsStore()
 const servicesStore = useServicesStore()
 const { items, loading } = storeToRefs(bookings)
 const { t, locale } = useI18n()
+const { confirm } = useConfirm()
 
 const error = ref<string | null>(null)
 
@@ -40,7 +42,12 @@ onMounted(() => {
 })
 
 async function cancel(booking: Booking): Promise<void> {
-  if (!confirm(t('bookings.confirmCancel'))) return
+  const ok = await confirm({
+    message: t('bookings.confirmCancel'),
+    confirmLabel: t('common.actions.cancel'),
+  })
+  if (!ok) return
+
   error.value = null
   try {
     await bookings.cancel(booking.id)

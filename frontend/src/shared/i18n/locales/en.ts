@@ -40,6 +40,13 @@ const en = {
       confirm: 'Confirm',
     },
 
+    // The shared confirm dialog names the going-ahead button after the action
+    // that opened it, so its other button can't be another "Cancel".
+    confirmDialog: {
+      title: 'Please confirm',
+      dismiss: 'Never mind',
+    },
+
     fields: {
       name: 'Name',
       description: 'Description',

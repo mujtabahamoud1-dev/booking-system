@@ -6,6 +6,7 @@ import { useServicesStore } from '@/features/services/store'
 import { useSlotsStore } from '../store'
 import { shortTime, type Slot, type UpdateSlotRequest } from '../types'
 import { apiErrorMessage } from '@/shared/api/client'
+import { useConfirm } from '@/shared/composables/useConfirm'
 import SlotForm from '../components/SlotForm.vue'
 import WeekTrack from '../components/WeekTrack.vue'
 import BaseButton from '@/shared/components/BaseButton.vue'
@@ -19,6 +20,7 @@ const slotsStore = useSlotsStore()
 const { items: services } = storeToRefs(servicesStore)
 const { loading } = storeToRefs(slotsStore)
 const { t } = useI18n()
+const { confirm } = useConfirm()
 
 const selectedServiceId = ref<number | null>(null)
 const selectedSlotId = ref<number | null>(null)
@@ -85,7 +87,12 @@ async function save(payload: UpdateSlotRequest): Promise<void> {
 
 async function remove(slot: Slot): Promise<void> {
   if (!selectedServiceId.value) return
-  if (!confirm(t('slots.confirmDelete'))) return
+  const ok = await confirm({
+    message: t('slots.confirmDelete'),
+    confirmLabel: t('common.actions.delete'),
+  })
+  if (!ok) return
+
   error.value = null
   try {
     await slotsStore.remove(slot.id, selectedServiceId.value)

@@ -37,6 +37,11 @@ const ar: Messages = {
       confirm: 'تأكيد',
     },
 
+    confirmDialog: {
+      title: 'يرجى التأكيد',
+      dismiss: 'تراجع',
+    },
+
     fields: {
       name: 'الاسم',
       description: 'الوصف',

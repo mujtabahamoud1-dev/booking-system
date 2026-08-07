@@ -2,6 +2,7 @@
 import { RouterView } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import NavBar from '@/shared/layout/NavBar.vue'
+import ConfirmDialog from '@/shared/components/ConfirmDialog.vue'
 
 const { t } = useI18n()
 </script>
@@ -22,5 +23,8 @@ const { t } = useI18n()
         <span>{{ t('common.brand.note') }}</span>
       </div>
     </footer>
+
+    <!-- One host for every useConfirm() caller in the app. -->
+    <ConfirmDialog />
   </div>
 </template>
