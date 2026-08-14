@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
+import { useI18n } from "vue-i18n";
 
-defineProps<{ label?: string }>()
+defineProps<{ label?: string }>();
 
-const { t } = useI18n()
+const { t } = useI18n();
 </script>
 
 <template>
@@ -13,7 +13,7 @@ const { t } = useI18n()
     <div class="track h-1 w-40 overflow-hidden rounded-full bg-line" aria-hidden="true">
       <div class="bar h-full w-1/3 rounded-full bg-brand"></div>
     </div>
-    <span class="u-label text-ink-faint">{{ label ?? t('common.loading') }}</span>
+    <span class="u-label text-ink-faint">{{ label ?? t("common.loading") }}</span>
   </div>
 </template>
 

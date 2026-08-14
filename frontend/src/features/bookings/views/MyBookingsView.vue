@@ -1,58 +1,58 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
-import { storeToRefs } from 'pinia'
-import { useI18n } from 'vue-i18n'
-import { useBookingsStore } from '../store'
-import { useServicesStore } from '@/features/services/store'
-import type { Booking } from '../types'
-import { apiErrorMessage } from '@/shared/api/client'
-import { useConfirm } from '@/shared/composables/useConfirm'
-import StatusBadge from '../components/StatusBadge.vue'
-import AlertMessage from '@/shared/components/AlertMessage.vue'
-import LoadingSpinner from '@/shared/components/LoadingSpinner.vue'
+import { computed, onMounted, ref } from "vue";
+import { RouterLink } from "vue-router";
+import { storeToRefs } from "pinia";
+import { useI18n } from "vue-i18n";
+import { useBookingsStore } from "../store";
+import { useServicesStore } from "@/features/services/store";
+import type { Booking } from "../types";
+import { apiErrorMessage } from "@/shared/api/client";
+import { useConfirm } from "@/shared/composables/useConfirm";
+import StatusBadge from "../components/StatusBadge.vue";
+import AlertMessage from "@/shared/components/AlertMessage.vue";
+import LoadingSpinner from "@/shared/components/LoadingSpinner.vue";
 
-const bookings = useBookingsStore()
-const servicesStore = useServicesStore()
-const { items, loading } = storeToRefs(bookings)
-const { t, locale } = useI18n()
-const { confirm } = useConfirm()
+const bookings = useBookingsStore();
+const servicesStore = useServicesStore();
+const { items, loading } = storeToRefs(bookings);
+const { t, locale } = useI18n();
+const { confirm } = useConfirm();
 
-const error = ref<string | null>(null)
+const error = ref<string | null>(null);
 
 // serviceId -> name, so each booking can show its service.
 const serviceNames = computed(() =>
   Object.fromEntries(servicesStore.items.map((s) => [s.id, s.name])),
-)
+);
 
 // Soonest first — the next appointment is the one you came here to check.
 const ordered = computed(() =>
   [...items.value].sort((a, b) => a.bookingDate.localeCompare(b.bookingDate)),
-)
+);
 
-const dayFormat = computed(() => new Intl.DateTimeFormat(locale.value, { day: 'numeric' }))
-const monthFormat = computed(() => new Intl.DateTimeFormat(locale.value, { month: 'short' }))
-const weekdayFormat = computed(() => new Intl.DateTimeFormat(locale.value, { weekday: 'long' }))
+const dayFormat = computed(() => new Intl.DateTimeFormat(locale.value, { day: "numeric" }));
+const monthFormat = computed(() => new Intl.DateTimeFormat(locale.value, { month: "short" }));
+const weekdayFormat = computed(() => new Intl.DateTimeFormat(locale.value, { weekday: "long" }));
 
-const asDate = (iso: string): Date => new Date(`${iso}T00:00:00`)
+const asDate = (iso: string): Date => new Date(`${iso}T00:00:00`);
 
 onMounted(() => {
-  bookings.loadMine()
-  servicesStore.load()
-})
+  bookings.loadMine();
+  servicesStore.load();
+});
 
 async function cancel(booking: Booking): Promise<void> {
   const ok = await confirm({
-    message: t('bookings.confirmCancel'),
-    confirmLabel: t('common.actions.cancel'),
-  })
-  if (!ok) return
+    message: t("bookings.confirmCancel"),
+    confirmLabel: t("common.actions.cancel"),
+  });
+  if (!ok) return;
 
-  error.value = null
+  error.value = null;
   try {
-    await bookings.cancel(booking.id)
+    await bookings.cancel(booking.id);
   } catch (e) {
-    error.value = apiErrorMessage(e, t('bookings.cancelFailed'))
+    error.value = apiErrorMessage(e, t("bookings.cancelFailed"));
   }
 }
 </script>
@@ -60,8 +60,8 @@ async function cancel(booking: Booking): Promise<void> {
 <template>
   <section>
     <header class="mb-8 sm:mb-10">
-      <h1 class="u-display text-3xl text-balance md:text-4xl">{{ t('bookings.mineTitle') }}</h1>
-      <p class="mt-3 text-ink-soft">{{ t('bookings.mineSubtitle') }}</p>
+      <h1 class="u-display text-3xl text-balance md:text-4xl">{{ t("bookings.mineTitle") }}</h1>
+      <p class="mt-3 text-ink-soft">{{ t("bookings.mineSubtitle") }}</p>
     </header>
 
     <AlertMessage v-if="error" class="mb-6">{{ error }}</AlertMessage>
@@ -72,12 +72,12 @@ async function cancel(booking: Booking): Promise<void> {
       v-else-if="items.length === 0"
       class="border border-dashed border-line px-6 py-16 text-center"
     >
-      <p class="text-sm text-ink-faint">{{ t('bookings.mineEmpty') }}</p>
+      <p class="text-sm text-ink-faint">{{ t("bookings.mineEmpty") }}</p>
       <RouterLink
         to="/"
         class="u-label mt-5 inline-block rounded-sm bg-brand px-4 py-2.5 text-surface transition-colors hover:bg-brand-deep"
       >
-        {{ t('bookings.browseServices') }}
+        {{ t("bookings.browseServices") }}
       </RouterLink>
     </div>
 
@@ -104,7 +104,7 @@ async function cancel(booking: Booking): Promise<void> {
           <p class="font-medium">
             {{
               serviceNames[booking.serviceId] ??
-              t('bookings.unnamedService', { id: booking.serviceId })
+              t("bookings.unnamedService", { id: booking.serviceId })
             }}
           </p>
           <p class="mt-0.5 text-sm text-ink-faint">
@@ -128,7 +128,7 @@ async function cancel(booking: Booking): Promise<void> {
             class="u-action u-label text-alert transition-opacity hover:opacity-70"
             @click="cancel(booking)"
           >
-            {{ t('common.actions.cancel') }}
+            {{ t("common.actions.cancel") }}
           </button>
         </div>
       </li>

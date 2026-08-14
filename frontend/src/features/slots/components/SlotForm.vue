@@ -1,29 +1,29 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { DAY_INDEXES, shortTime, type Slot, type UpdateSlotRequest } from '../types'
-import BaseInput from '@/shared/components/BaseInput.vue'
-import BaseSelect from '@/shared/components/BaseSelect.vue'
-import BaseButton from '@/shared/components/BaseButton.vue'
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { DAY_INDEXES, shortTime, type Slot, type UpdateSlotRequest } from "../types";
+import BaseInput from "@/shared/components/BaseInput.vue";
+import BaseSelect from "@/shared/components/BaseSelect.vue";
+import BaseButton from "@/shared/components/BaseButton.vue";
 
-const props = defineProps<{ slot: Slot | null; submitting: boolean }>()
-const emit = defineEmits<{ save: [payload: UpdateSlotRequest]; cancel: [] }>()
+const props = defineProps<{ slot: Slot | null; submitting: boolean }>();
+const emit = defineEmits<{ save: [payload: UpdateSlotRequest]; cancel: [] }>();
 
-const { t } = useI18n()
+const { t } = useI18n();
 
-const dayOfWeek = ref<number>(props.slot?.dayOfWeek ?? 1)
+const dayOfWeek = ref<number>(props.slot?.dayOfWeek ?? 1);
 // <input type="time"> works in "HH:mm"; the API wants "HH:mm:ss".
-const startTime = ref(props.slot ? shortTime(props.slot.startTime) : '09:00')
-const endTime = ref(props.slot ? shortTime(props.slot.endTime) : '17:00')
-const maxBookings = ref<number>(props.slot?.maxBookings ?? 1)
+const startTime = ref(props.slot ? shortTime(props.slot.startTime) : "09:00");
+const endTime = ref(props.slot ? shortTime(props.slot.endTime) : "17:00");
+const maxBookings = ref<number>(props.slot?.maxBookings ?? 1);
 
 function submit(): void {
-  emit('save', {
+  emit("save", {
     dayOfWeek: Number(dayOfWeek.value),
     startTime: `${startTime.value}:00`,
     endTime: `${endTime.value}:00`,
     maxBookings: Number(maxBookings.value),
-  })
+  });
 }
 </script>
 
@@ -50,10 +50,10 @@ function submit(): void {
 
     <div class="flex justify-end gap-2 border-t border-line pt-5">
       <BaseButton variant="secondary" @click="emit('cancel')">
-        {{ t('common.actions.cancel') }}
+        {{ t("common.actions.cancel") }}
       </BaseButton>
       <BaseButton type="submit" :loading="submitting">
-        {{ slot ? t('common.actions.saveChanges') : t('common.actions.create') }}
+        {{ slot ? t("common.actions.saveChanges") : t("common.actions.create") }}
       </BaseButton>
     </div>
   </form>

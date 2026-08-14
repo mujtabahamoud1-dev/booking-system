@@ -31,9 +31,7 @@
   --color-alert-soft: #f6e4e0;
 
   --font-display: "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
-  --font-body:
-    "Instrument Sans", "IBM Plex Sans Arabic", ui-sans-serif, system-ui,
-    sans-serif;
+  --font-body: "Instrument Sans", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", "IBM Plex Sans Arabic", ui-monospace, monospace;
 }
 
@@ -41,6 +39,10 @@ html,
 body,
 #app {
   min-height: 100%;
+}
+
+html {
+  scrollbar-gutter: stable;
 }
 
 body {

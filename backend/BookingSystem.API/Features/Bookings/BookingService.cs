@@ -52,10 +52,15 @@ public class BookingService : IBookingService
         return bookings.Select(BookingResponse.From).ToList();
     }
 
-    public async Task<List<BookingResponse>> GetAllAsync()
+    public async Task<AdminBookingListResponse> GetAllAsync(AdminBookingQuery query)
     {
-        var bookings = await _bookings.GetAllAsync();
-        return bookings.Select(BookingResponse.From).ToList();
+        // Two reads, one round trip each: the page the admin asked for, and the
+        // counts for the filters they did not pick.
+        var bookings = await _bookings.GetAllAsync(query);
+        var counts = await _bookings.CountByStatusAsync(query);
+        return new AdminBookingListResponse(
+            bookings.Select(AdminBookingResponse.From).ToList(),
+            counts);
     }
 
     public async Task<ChangeStatusResult> CancelAsync(int id, int requestingUserId, bool isAdmin)

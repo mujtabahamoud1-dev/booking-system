@@ -34,9 +34,7 @@ export function configureAuth(handlers: {
 }
 
 const isAuthPath = (url = ""): boolean =>
-  ["/auth/login", "/auth/register", "/auth/refresh"].some((p) =>
-    url.includes(p),
-  );
+  ["/auth/login", "/auth/register", "/auth/refresh"].some((p) => url.includes(p));
 
 api.interceptors.request.use((config) => {
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
@@ -49,8 +47,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const original = error.config as
-      | (InternalAxiosRequestConfig & { _retry?: boolean })
-      | undefined;
+      (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
 
     if (
       error.response?.status === 401 &&
@@ -77,10 +74,7 @@ api.interceptors.response.use(
 
 // Pull the API's `{ message }` body out of an error for display; fall back to
 // the axios message otherwise.
-export function apiErrorMessage(
-  error: unknown,
-  fallback = "Something went wrong.",
-): string {
+export function apiErrorMessage(error: unknown, fallback = "Something went wrong."): string {
   if (error instanceof AxiosError) {
     const data = error.response?.data as { message?: string } | undefined;
     return data?.message ?? error.message ?? fallback;

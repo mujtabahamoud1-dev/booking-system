@@ -1,31 +1,31 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, useId } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { onBeforeUnmount, onMounted, ref, useId } from "vue";
+import { useI18n } from "vue-i18n";
 
-defineProps<{ title: string }>()
-const emit = defineEmits<{ close: [] }>()
+defineProps<{ title: string }>();
+const emit = defineEmits<{ close: [] }>();
 
-const { t } = useI18n()
+const { t } = useI18n();
 
-const panel = ref<HTMLElement | null>(null)
-const titleId = useId()
+const panel = ref<HTMLElement | null>(null);
+const titleId = useId();
 
 function onKeydown(event: KeyboardEvent): void {
-  if (event.key === 'Escape') emit('close')
+  if (event.key === "Escape") emit("close");
 }
 
 // Escape closes, the panel takes focus on open, and the page behind it stops
 // scrolling — the parts a dialog needs to not feel broken.
 onMounted(() => {
-  document.addEventListener('keydown', onKeydown)
-  document.body.style.overflow = 'hidden'
-  panel.value?.focus()
-})
+  document.addEventListener("keydown", onKeydown);
+  document.body.style.overflow = "hidden";
+  panel.value?.focus();
+});
 
 onBeforeUnmount(() => {
-  document.removeEventListener('keydown', onKeydown)
-  document.body.style.overflow = ''
-})
+  document.removeEventListener("keydown", onKeydown);
+  document.body.style.overflow = "";
+});
 </script>
 
 <template>

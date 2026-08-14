@@ -1,31 +1,31 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed } from "vue";
 
 const props = defineProps<{
-  label: string
+  label: string;
   // Kept for assistive tech when a surrounding legend already names the field,
   // so the label is not read out twice.
-  hideLabel?: boolean
-  type?: string
-  placeholder?: string
-  required?: boolean
-  error?: string | null
-  min?: string | number
-  step?: string | number
-}>()
+  hideLabel?: boolean;
+  type?: string;
+  placeholder?: string;
+  required?: boolean;
+  error?: string | null;
+  min?: string | number;
+  step?: string | number;
+}>();
 
 // Attributes like `autocomplete` were landing on the wrapping <label> instead of
 // the control; forward them to the input explicitly.
-defineOptions({ inheritAttrs: false })
+defineOptions({ inheritAttrs: false });
 
 // Two-way binding via defineModel; accepts string or number for number inputs.
-const model = defineModel<string | number | null>()
+const model = defineModel<string | number | null>();
 
 // Measured values are set in the mono face wherever they appear, including
 // while you are typing them.
 const isMeasured = computed(() =>
-  ['date', 'time', 'number', 'datetime-local'].includes(props.type ?? 'text'),
-)
+  ["date", "time", "number", "datetime-local"].includes(props.type ?? "text"),
+);
 </script>
 
 <template>

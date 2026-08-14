@@ -17,6 +17,23 @@ public class SlotService : ISlotService
         return slots.Select(SlotResponse.From).ToList();
     }
 
+    public async Task<SlotListResponse> SearchAsync(SlotQuery query)
+    {
+        var slots = await _slots.SearchAsync(query);
+        var rows = await _slots.CountByDayAsync(query);
+
+        // Days with no slots do not come back from the GROUP BY, so the array is
+        // built from all seven — a zero is exactly the thing an admin is looking
+        // for here.
+        var byDay = new int[7];
+        foreach (var row in rows)
+            if (row.DayOfWeek is >= 0 and <= 6) byDay[row.DayOfWeek] = row.Count;
+
+        return new SlotListResponse(
+            slots.Select(SlotResponse.From).ToList(),
+            new SlotCounts(byDay.Sum(), byDay));
+    }
+
     public async Task<SlotResponse?> GetByIdAsync(int id)
     {
         var slot = await _slots.GetByIdAsync(id);

@@ -18,6 +18,7 @@ public enum DeleteSlotResult
 public interface ISlotService
 {
     Task<List<SlotResponse>> GetForServiceAsync(int serviceId);
+    Task<SlotListResponse> SearchAsync(SlotQuery query);
     Task<SlotResponse?> GetByIdAsync(int id);
     Task<CreateSlotOutcome> CreateAsync(CreateSlotRequest req);
     Task<SlotResponse?> UpdateAsync(int id, UpdateSlotRequest req);

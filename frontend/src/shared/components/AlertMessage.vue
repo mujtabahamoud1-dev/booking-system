@@ -1,13 +1,13 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ tone?: 'error' | 'success' | 'info' }>(), { tone: 'error' })
+withDefaults(defineProps<{ tone?: "error" | "success" | "info" }>(), { tone: "error" });
 
 // A tone-coloured rule on the leading edge carries the signal, so the message
 // body stays quiet enough to read.
 const tones: Record<string, string> = {
-  error: 'bg-alert-soft text-ink border-alert',
-  success: 'bg-brand-soft text-ink border-brand',
-  info: 'bg-signal-soft text-ink border-signal',
-}
+  error: "bg-alert-soft text-ink border-alert",
+  success: "bg-brand-soft text-ink border-brand",
+  info: "bg-signal-soft text-ink border-signal",
+};
 </script>
 
 <template>

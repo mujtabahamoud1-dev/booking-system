@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-import { LOCALES, setLocale, type Locale } from '@/shared/i18n'
+import { useI18n } from "vue-i18n";
+import { LOCALES, setLocale, type Locale } from "@/shared/i18n";
 
-const { locale, t } = useI18n()
+const { locale, t } = useI18n();
 
 // A segmented control rather than a toggle: both languages are visible, so you
 // can see which one is active instead of inferring it from the button label.
-const shortLabels: Record<Locale, string> = { en: 'EN', ar: 'ع' }
-const fullLabels: Record<Locale, string> = { en: 'common.english', ar: 'common.arabic' }
+const shortLabels: Record<Locale, string> = { en: "EN", ar: "ع" };
+const fullLabels: Record<Locale, string> = { en: "common.english", ar: "common.arabic" };
 </script>
 
 <template>

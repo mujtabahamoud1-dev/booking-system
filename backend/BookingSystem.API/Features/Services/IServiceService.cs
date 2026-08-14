@@ -10,6 +10,7 @@ public enum DeleteServiceResult
 public interface IServiceService
 {
     Task<List<ServiceResponse>> GetAllAsync(bool includeInactive);
+    Task<ServiceListResponse> SearchAsync(ServiceQuery query);
     Task<ServiceResponse?> GetByIdAsync(int id);
     Task<ServiceResponse> CreateAsync(CreateServiceRequest req);
     Task<ServiceResponse?> UpdateAsync(int id, UpdateServiceRequest req);

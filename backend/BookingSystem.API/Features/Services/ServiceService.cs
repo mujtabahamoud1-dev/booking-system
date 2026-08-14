@@ -17,6 +17,13 @@ public class ServiceService : IServiceService
         return services.Select(ServiceResponse.From).ToList();
     }
 
+    public async Task<ServiceListResponse> SearchAsync(ServiceQuery query)
+    {
+        var services = await _services.SearchAsync(query);
+        var counts = await _services.CountAsync(query);
+        return new ServiceListResponse(services.Select(ServiceResponse.From).ToList(), counts);
+    }
+
     public async Task<ServiceResponse?> GetByIdAsync(int id)
     {
         var service = await _services.GetByIdAsync(id);

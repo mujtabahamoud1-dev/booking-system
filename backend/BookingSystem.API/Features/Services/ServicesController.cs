@@ -21,6 +21,20 @@ public class ServicesController : ControllerBase
         return Ok(services);
     }
 
+    // The admin list, filtered in the database. Kept apart from the public
+    // endpoint above so that one can stay a plain array for patients while this
+    // one carries the counts the admin filter chips need.
+    [HttpGet("admin")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> Search([FromQuery] string? search, [FromQuery] string? status)
+    {
+        if (!TryParseActive(status, out var isActive))
+            return BadRequest(new { message = "Unknown service status." });
+
+        var services = await _services.SearchAsync(new ServiceQuery(search, isActive));
+        return Ok(services);
+    }
+
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -65,6 +79,19 @@ public class ServicesController : ControllerBase
             }),
             _ => StatusCode(500)
         };
+    }
+
+    // An unrecognised status is rejected rather than ignored: silently returning
+    // everything would read as "nothing has been deactivated".
+    private static bool TryParseActive(string? value, out bool? isActive)
+    {
+        isActive = value switch
+        {
+            "active"   => true,
+            "inactive" => false,
+            _ => null
+        };
+        return isActive is not null || string.IsNullOrWhiteSpace(value) || value == "all";
     }
 
     private static bool TryValidate(string name, int duration, decimal price, out string error)

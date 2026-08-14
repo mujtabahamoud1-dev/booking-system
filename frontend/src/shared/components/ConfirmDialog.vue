@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-import BaseModal from './BaseModal.vue'
-import BaseButton from './BaseButton.vue'
-import { useConfirmHost } from '../composables/useConfirm'
+import { useI18n } from "vue-i18n";
+import BaseModal from "./BaseModal.vue";
+import BaseButton from "./BaseButton.vue";
+import { useConfirmHost } from "../composables/useConfirm";
 
-const { t } = useI18n()
-const { request } = useConfirmHost()
+const { t } = useI18n();
+const { request } = useConfirmHost();
 </script>
 
 <template>
@@ -21,10 +21,10 @@ const { request } = useConfirmHost()
 
     <div class="mt-6 flex justify-end gap-2 border-t border-line pt-5">
       <BaseButton variant="secondary" @click="request?.settle(false)">
-        {{ request.dismissLabel ?? t('common.confirmDialog.dismiss') }}
+        {{ request.dismissLabel ?? t("common.confirmDialog.dismiss") }}
       </BaseButton>
       <BaseButton :variant="request.variant ?? 'danger'" @click="request?.settle(true)">
-        {{ request.confirmLabel ?? t('common.actions.confirm') }}
+        {{ request.confirmLabel ?? t("common.actions.confirm") }}
       </BaseButton>
     </div>
   </BaseModal>

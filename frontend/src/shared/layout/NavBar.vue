@@ -1,36 +1,36 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
-import { useAuthStore } from '@/features/auth/store'
-import LanguageSwitcher from '@/shared/components/LanguageSwitcher.vue'
+import { computed } from "vue";
+import { RouterLink, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
+import { useAuthStore } from "@/features/auth/store";
+import LanguageSwitcher from "@/shared/components/LanguageSwitcher.vue";
 
-const auth = useAuthStore()
-const router = useRouter()
-const { t } = useI18n()
+const auth = useAuthStore();
+const router = useRouter();
+const { t } = useI18n();
 
 // Route targets shown for the current session, in nav order.
 const links = computed(() => {
   if (!auth.isAuthenticated) {
-    return [{ to: '/', label: t('common.nav.services') }]
+    return [{ to: "/", label: t("common.nav.services") }];
   }
   if (auth.isAdmin) {
     return [
-      { to: '/admin', label: t('common.nav.dashboard') },
-      { to: '/admin/services', label: t('common.nav.services') },
-      { to: '/admin/slots', label: t('common.nav.slots') },
-      { to: '/admin/bookings', label: t('common.nav.bookings') },
-    ]
+      { to: "/admin", label: t("common.nav.dashboard") },
+      { to: "/admin/services", label: t("common.nav.services") },
+      { to: "/admin/slots", label: t("common.nav.slots") },
+      { to: "/admin/bookings", label: t("common.nav.bookings") },
+    ];
   }
   return [
-    { to: '/', label: t('common.nav.services') },
-    { to: '/bookings', label: t('common.nav.myBookings') },
-  ]
-})
+    { to: "/", label: t("common.nav.services") },
+    { to: "/bookings", label: t("common.nav.myBookings") },
+  ];
+});
 
 async function logout(): Promise<void> {
-  await auth.logout()
-  router.push('/login')
+  await auth.logout();
+  router.push("/login");
 }
 </script>
 
@@ -43,8 +43,10 @@ async function logout(): Promise<void> {
       class="u-gutter mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 pt-1.5 pb-0 lg:h-18 lg:flex-nowrap lg:py-0"
     >
       <RouterLink to="/" class="order-1 flex items-baseline gap-2.5 py-2 whitespace-nowrap">
-        <span class="u-display text-lg text-brand">{{ t('common.brand.name') }}</span>
-        <span class="u-label hidden text-ink-faint sm:inline">{{ t('common.brand.discipline') }}</span>
+        <span class="u-display text-lg text-brand">{{ t("common.brand.name") }}</span>
+        <span class="u-label hidden text-ink-faint sm:inline">{{
+          t("common.brand.discipline")
+        }}</span>
       </RouterLink>
 
       <!-- Four destinations at most, and every one of them fits: the links take
@@ -72,15 +74,18 @@ async function logout(): Promise<void> {
         <template v-if="auth.isAuthenticated">
           <span class="hidden items-baseline gap-2 text-sm text-ink-soft sm:flex">
             {{ auth.name }}
-            <span v-if="auth.isAdmin" class="u-label rounded-sm bg-brand-soft px-1.5 py-0.5 text-brand">
-              {{ t('common.nav.admin') }}
+            <span
+              v-if="auth.isAdmin"
+              class="u-label rounded-sm bg-brand-soft px-1.5 py-0.5 text-brand"
+            >
+              {{ t("common.nav.admin") }}
             </span>
           </span>
           <button
             class="u-action u-label text-ink-faint transition-colors hover:text-ink"
             @click="logout"
           >
-            {{ t('common.nav.logout') }}
+            {{ t("common.nav.logout") }}
           </button>
         </template>
         <template v-else>
@@ -88,13 +93,13 @@ async function logout(): Promise<void> {
             to="/login"
             class="u-action u-label text-ink-faint transition-colors hover:text-ink"
           >
-            {{ t('common.nav.login') }}
+            {{ t("common.nav.login") }}
           </RouterLink>
           <RouterLink
             to="/register"
             class="u-action u-label rounded-sm bg-brand px-3.5 py-2 text-surface transition-colors hover:bg-brand-deep"
           >
-            {{ t('common.nav.register') }}
+            {{ t("common.nav.register") }}
           </RouterLink>
         </template>
       </div>

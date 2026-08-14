@@ -1,10 +1,10 @@
 <script setup lang="ts">
-defineProps<{ label: string; hideLabel?: boolean }>()
+defineProps<{ label: string; hideLabel?: boolean }>();
 
-defineOptions({ inheritAttrs: false })
+defineOptions({ inheritAttrs: false });
 
 // Options are passed as a slot so callers keep control of their own <option>s.
-const model = defineModel<string | number | null>()
+const model = defineModel<string | number | null>();
 </script>
 
 <template>
@@ -26,7 +26,12 @@ const model = defineModel<string | number | null>()
         fill="none"
         aria-hidden="true"
       >
-        <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <path
+          d="M2.5 4.5L6 8l3.5-3.5"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
       </svg>
     </div>
   </label>

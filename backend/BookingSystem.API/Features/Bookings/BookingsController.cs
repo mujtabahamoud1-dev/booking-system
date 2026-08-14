@@ -39,12 +39,35 @@ public class BookingsController : ControllerBase
         return Ok(bookings);
     }
 
+    // The admin queue, filtered in the database. `search` matches the patient's
+    // name, email or phone and the service name; `from`/`to` bound the booking
+    // date. Every filter is optional.
     [HttpGet]
     [Authorize(Roles = "admin")]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(
+        [FromQuery] string? search,
+        [FromQuery] string? status,
+        [FromQuery] DateOnly? from,
+        [FromQuery] DateOnly? to)
     {
-        var bookings = await _bookings.GetAllAsync();
+        if (!TryParseStatus(status, out var parsedStatus))
+            return BadRequest(new { message = "Unknown booking status." });
+
+        var bookings = await _bookings.GetAllAsync(new AdminBookingQuery(search, parsedStatus, from, to));
         return Ok(bookings);
+    }
+
+    // An unrecognised status is rejected rather than quietly ignored — silently
+    // returning the unfiltered queue would read as "there are no pending ones".
+    private static bool TryParseStatus(string? value, out BookingStatus? status)
+    {
+        status = null;
+        if (string.IsNullOrWhiteSpace(value) || value == "all") return true;
+
+        if (!Enum.TryParse<BookingStatus>(value, ignoreCase: true, out var parsed)) return false;
+
+        status = parsed;
+        return true;
     }
 
     [HttpPost("{id:int}/cancel")]

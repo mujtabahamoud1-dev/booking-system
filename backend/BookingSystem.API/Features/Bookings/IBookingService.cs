@@ -27,7 +27,7 @@ public interface IBookingService
 {
     Task<CreateBookingResult> CreateAsync(int userId, CreateBookingRequest req);
     Task<List<BookingResponse>> GetForUserAsync(int userId);
-    Task<List<BookingResponse>> GetAllAsync();
+    Task<AdminBookingListResponse> GetAllAsync(AdminBookingQuery query);
     Task<ChangeStatusResult> CancelAsync(int id, int requestingUserId, bool isAdmin);
     Task<ChangeStatusResult> ConfirmAsync(int id);
 }

@@ -19,6 +19,20 @@ public class SlotsController : ControllerBase
         return Ok(slots);
     }
 
+    // The admin week. Omitting serviceId spans every service at once, which is
+    // the only way to see that a weekday has no cover from anyone — so this one
+    // is admin-only, unlike the per-service route above.
+    [HttpGet]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> Search([FromQuery] int? serviceId, [FromQuery] int? dayOfWeek)
+    {
+        if (dayOfWeek is < 0 or > 6)
+            return BadRequest(new { message = "DayOfWeek must be between 0 (Sunday) and 6 (Saturday)." });
+
+        var slots = await _slots.SearchAsync(new SlotQuery(serviceId, dayOfWeek));
+        return Ok(slots);
+    }
+
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {

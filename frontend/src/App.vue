@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
-import { useI18n } from 'vue-i18n'
-import NavBar from '@/shared/layout/NavBar.vue'
-import ConfirmDialog from '@/shared/components/ConfirmDialog.vue'
+import { RouterView } from "vue-router";
+import { useI18n } from "vue-i18n";
+import NavBar from "@/shared/layout/NavBar.vue";
+import ConfirmDialog from "@/shared/components/ConfirmDialog.vue";
 
-const { t } = useI18n()
+const { t } = useI18n();
 </script>
 
 <template>
@@ -19,8 +19,8 @@ const { t } = useI18n()
       <div
         class="u-gutter u-safe-bottom mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-3 gap-y-1.5 pt-6 text-xs text-ink-faint"
       >
-        <span>{{ t('common.brand.name') }} · {{ t('common.brand.discipline') }}</span>
-        <span>{{ t('common.brand.note') }}</span>
+        <span>{{ t("common.brand.name") }} · {{ t("common.brand.discipline") }}</span>
+        <span>{{ t("common.brand.note") }}</span>
       </div>
     </footer>
 

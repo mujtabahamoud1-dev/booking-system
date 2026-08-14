@@ -4,7 +4,8 @@ public interface IBookingRepository
 {
     Task<Booking?> GetByIdAsync(int id);
     Task<List<Booking>> GetForUserAsync(int userId);
-    Task<List<Booking>> GetAllAsync();
+    Task<List<BookingWithPatient>> GetAllAsync(AdminBookingQuery query);
+    Task<BookingStatusCounts> CountByStatusAsync(AdminBookingQuery query);
 
     // Reads the slot and locks its row for the current transaction (SELECT ... FOR UPDATE),
     // so concurrent bookings for the same slot are serialized during the capacity check.

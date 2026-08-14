@@ -1,22 +1,22 @@
 <script setup lang="ts">
 withDefaults(
   defineProps<{
-    variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
-    type?: 'button' | 'submit'
-    disabled?: boolean
-    loading?: boolean
+    variant?: "primary" | "secondary" | "danger" | "ghost";
+    type?: "button" | "submit";
+    disabled?: boolean;
+    loading?: boolean;
   }>(),
-  { variant: 'primary', type: 'button', disabled: false, loading: false },
-)
+  { variant: "primary", type: "button", disabled: false, loading: false },
+);
 
 // Red is reserved for destruction, so `danger` is the only variant that gets it
 // and `primary` never has to compete with it for attention.
 const styles: Record<string, string> = {
-  primary: 'bg-brand text-surface hover:bg-brand-deep',
-  secondary: 'bg-surface text-ink ring-1 ring-inset ring-line hover:bg-ground',
-  danger: 'bg-alert text-surface hover:bg-alert/90',
-  ghost: 'text-ink-soft hover:bg-ground hover:text-ink',
-}
+  primary: "bg-brand text-surface hover:bg-brand-deep",
+  secondary: "bg-surface text-ink ring-1 ring-inset ring-line hover:bg-ground",
+  danger: "bg-alert text-surface hover:bg-alert/90",
+  ghost: "text-ink-soft hover:bg-ground hover:text-ink",
+};
 </script>
 
 <template>

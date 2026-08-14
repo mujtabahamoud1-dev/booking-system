@@ -1,43 +1,43 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
-import { storeToRefs } from 'pinia'
-import { useI18n } from 'vue-i18n'
-import { useServicesStore } from '../store'
-import { useAuthStore } from '@/features/auth/store'
-import LoadingSpinner from '@/shared/components/LoadingSpinner.vue'
+import { computed, onMounted } from "vue";
+import { RouterLink } from "vue-router";
+import { storeToRefs } from "pinia";
+import { useI18n } from "vue-i18n";
+import { useServicesStore } from "../store";
+import { useAuthStore } from "@/features/auth/store";
+import LoadingSpinner from "@/shared/components/LoadingSpinner.vue";
 
-const store = useServicesStore()
-const auth = useAuthStore()
-const { t } = useI18n()
-const { items, loading } = storeToRefs(store)
+const store = useServicesStore();
+const auth = useAuthStore();
+const { t } = useI18n();
+const { items, loading } = storeToRefs(store);
 
-onMounted(() => store.load())
+onMounted(() => store.load());
 
 // Session lengths are drawn to scale against the longest one on offer, so a
 // 30-minute assessment and a 60-minute rehab session are comparable at a glance
 // instead of being two numbers you have to hold in your head.
-const longest = computed(() => Math.max(...items.value.map((s) => s.duration), 1))
+const longest = computed(() => Math.max(...items.value.map((s) => s.duration), 1));
 
 const range = computed(() => {
-  if (items.value.length === 0) return null
-  const durations = items.value.map((s) => s.duration)
-  return { min: Math.min(...durations), max: Math.max(...durations) }
-})
+  if (items.value.length === 0) return null;
+  const durations = items.value.map((s) => s.duration);
+  return { min: Math.min(...durations), max: Math.max(...durations) };
+});
 </script>
 
 <template>
   <section>
     <header class="mb-9 max-w-2xl sm:mb-12">
-      <p class="u-label mb-4 text-brand">{{ t('services.eyebrow') }}</p>
-      <h1 class="u-display text-4xl text-balance md:text-5xl">{{ t('services.title') }}</h1>
-      <p class="mt-4 text-base text-ink-soft sm:text-lg">{{ t('services.subtitle') }}</p>
+      <p class="u-label mb-4 text-brand">{{ t("services.eyebrow") }}</p>
+      <h1 class="u-display text-4xl text-balance md:text-5xl">{{ t("services.title") }}</h1>
+      <p class="mt-4 text-base text-ink-soft sm:text-lg">{{ t("services.subtitle") }}</p>
 
       <p v-if="range" class="mt-6 flex items-baseline gap-3 text-xs">
-        <span class="u-label text-ink-faint">{{ t('services.sessionLength') }}</span>
+        <span class="u-label text-ink-faint">{{ t("services.sessionLength") }}</span>
         <span class="u-data text-ink-soft">
           <span dir="ltr" class="inline-block">{{ range.min }}–{{ range.max }}</span>
-          {{ t('common.minutesUnit') }}
+          {{ t("common.minutesUnit") }}
         </span>
       </p>
     </header>
@@ -48,7 +48,7 @@ const range = computed(() => {
       v-else-if="items.length === 0"
       class="border border-dashed border-line px-6 py-16 text-center text-sm text-ink-faint"
     >
-      {{ t('services.empty') }}
+      {{ t("services.empty") }}
     </p>
 
     <!-- Borders live on the cards, not as grid gaps: a part-filled last row then
@@ -62,15 +62,15 @@ const range = computed(() => {
       >
         <h2 class="u-display text-xl">{{ service.name }}</h2>
         <p class="mt-2 flex-1 text-sm leading-relaxed text-ink-soft">
-          {{ service.description || t('services.noDescription') }}
+          {{ service.description || t("services.noDescription") }}
         </p>
 
         <!-- Duration as a measured bar, same visual language as the week track. -->
         <div class="mt-6">
           <div class="mb-1.5 flex items-baseline justify-between">
-            <span class="u-label text-ink-faint">{{ t('common.fields.duration') }}</span>
+            <span class="u-label text-ink-faint">{{ t("common.fields.duration") }}</span>
             <span class="u-data text-sm font-medium">
-              {{ t('common.minutesShort', { count: service.duration }) }}
+              {{ t("common.minutesShort", { count: service.duration }) }}
             </span>
           </div>
           <div dir="ltr" class="h-1.5 w-full bg-ground">
@@ -90,7 +90,7 @@ const range = computed(() => {
             :to="`/book/${service.id}`"
             class="u-action u-label rounded-sm bg-brand px-4 py-2.5 text-surface transition-colors hover:bg-brand-deep"
           >
-            {{ t('services.bookNow') }}
+            {{ t("services.bookNow") }}
           </RouterLink>
         </div>
       </article>
