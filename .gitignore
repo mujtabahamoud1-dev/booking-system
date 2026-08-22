@@ -26,3 +26,6 @@ Thumbs.db
 
 # Stray root lockfile — npm runs from frontend/, which has its own
 /package-lock.json
+
+# Playwright MCP screenshots/snapshots from local browser sessions
+.playwright-mcp/
