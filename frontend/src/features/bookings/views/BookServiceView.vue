@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { RouterLink, useRouter } from "vue-router";
+import { RouterLink } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { servicesApi } from "@/features/services/api";
 import type { Service } from "@/features/services/types";
+import { useServiceLabels } from "@/features/services/labels";
 import { slotsApi } from "@/features/slots/api";
 import { shortTime, type Slot } from "@/features/slots/types";
 import { useBookingsStore } from "../store";
+import type { Booking } from "../types";
 import { apiErrorMessage } from "@/shared/api/client";
+import StatusBadge from "../components/StatusBadge.vue";
 import WeekTrack from "@/features/slots/components/WeekTrack.vue";
 import BaseInput from "@/shared/components/BaseInput.vue";
 import BaseButton from "@/shared/components/BaseButton.vue";
@@ -15,13 +18,16 @@ import AlertMessage from "@/shared/components/AlertMessage.vue";
 import LoadingSpinner from "@/shared/components/LoadingSpinner.vue";
 
 const props = defineProps<{ serviceId: string }>();
-const router = useRouter();
 const bookings = useBookingsStore();
 const { t, locale } = useI18n();
+const { serviceName } = useServiceLabels();
 
 const service = ref<Service | null>(null);
 const slots = ref<Slot[]>([]);
 const loading = ref(true);
+
+// The created booking; shown in place of the form.
+const submitted = ref<Booking | null>(null);
 
 const selectedSlotId = ref<number | null>(null);
 const bookingDate = ref("");
@@ -109,19 +115,35 @@ async function submit(): Promise<void> {
   error.value = null;
   submitting.value = true;
   try {
-    await bookings.create({
+    submitted.value = await bookings.create({
       serviceId: id,
       slotId: selectedSlotId.value,
       bookingDate: bookingDate.value,
       notes: notes.value || null,
     });
-    router.push("/bookings");
+    window.scrollTo({ top: 0 });
   } catch (e) {
     error.value = apiErrorMessage(e, t("bookings.createFailed"));
   } finally {
     submitting.value = false;
   }
 }
+
+function reset(): void {
+  submitted.value = null;
+  selectedSlotId.value = null;
+  bookingDate.value = "";
+  notes.value = "";
+  error.value = null;
+}
+
+const submittedWeekday = computed(() =>
+  submitted.value
+    ? new Intl.DateTimeFormat(locale.value, { weekday: "long" }).format(
+        new Date(`${submitted.value.bookingDate}T00:00:00`),
+      )
+    : "",
+);
 </script>
 
 <template>
@@ -138,7 +160,7 @@ async function submit(): Promise<void> {
       </RouterLink>
 
       <header class="mb-8 border-b border-line pb-6 sm:mb-10 sm:pb-8">
-        <h1 class="u-display text-3xl text-balance md:text-4xl">{{ service.name }}</h1>
+        <h1 class="u-display text-3xl text-balance md:text-4xl">{{ serviceName(service) }}</h1>
         <p class="u-data mt-3 text-sm text-ink-soft">
           {{ t("common.minutesShort", { count: service.duration }) }}
           <span class="mx-2 text-line" aria-hidden="true">/</span>
@@ -147,7 +169,47 @@ async function submit(): Promise<void> {
         </p>
       </header>
 
-      <form class="space-y-10" @submit.prevent="submit">
+      <div v-if="submitted">
+        <p class="u-label mb-4 text-brand">{{ t("bookings.sentEyebrow") }}</p>
+        <h2 class="u-display text-2xl text-balance md:text-3xl">{{ t("bookings.sentTitle") }}</h2>
+
+        <div class="mt-7 border border-line bg-surface p-5 sm:p-6">
+          <p class="u-label text-ink-faint">{{ t("bookings.sentWhen") }}</p>
+          <p class="mt-2 flex flex-wrap items-baseline gap-x-2 text-lg">
+            <span>{{ submittedWeekday }}</span>
+            <span class="u-data">{{ formatDate(submitted.bookingDate) }}</span>
+            <span class="text-line" aria-hidden="true">/</span>
+            <span dir="ltr" class="u-data inline-block">
+              {{ shortTime(submitted.slotStartTime) }}–{{ shortTime(submitted.slotEndTime) }}
+            </span>
+          </p>
+          <div class="mt-5 border-t border-line pt-4">
+            <StatusBadge :status="submitted.status" />
+          </div>
+        </div>
+
+        <p class="mt-6 max-w-prose text-sm leading-relaxed text-ink-soft">
+          {{ t("bookings.sentBody") }}
+        </p>
+
+        <div class="mt-8 flex flex-wrap gap-3">
+          <RouterLink
+            to="/bookings"
+            class="u-action u-label rounded-sm bg-brand px-4 py-2.5 text-surface transition-colors hover:bg-brand-deep"
+          >
+            {{ t("bookings.viewBookings") }}
+          </RouterLink>
+          <button
+            type="button"
+            class="u-action u-label rounded-sm px-4 py-2.5 text-ink ring-1 ring-line ring-inset transition-colors hover:bg-brand-soft"
+            @click="reset"
+          >
+            {{ t("bookings.bookAnother") }}
+          </button>
+        </div>
+      </div>
+
+      <form v-else class="space-y-10" @submit.prevent="submit">
         <AlertMessage v-if="error">{{ error }}</AlertMessage>
 
         <!-- Step one: the week's cover, drawn against a clock. -->

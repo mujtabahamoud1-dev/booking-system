@@ -4,6 +4,8 @@ import { storeToRefs } from "pinia";
 import { useI18n } from "vue-i18n";
 import { useBookingsStore } from "../store";
 import { useServicesStore } from "@/features/services/store";
+import { serviceName as localizedServiceName } from "@/features/services/labels";
+import { shortTime } from "@/features/slots/types";
 import type { AdminBooking, BookingStatus } from "../types";
 import { apiErrorMessage } from "@/shared/api/client";
 import { useConfirm } from "@/shared/composables/useConfirm";
@@ -17,7 +19,7 @@ import FilterChips from "@/shared/components/FilterChips.vue";
 const bookings = useBookingsStore();
 const servicesStore = useServicesStore();
 const { adminItems: items, adminCounts: counts, adminLoaded, loading } = storeToRefs(bookings);
-const { t } = useI18n();
+const { t, locale } = useI18n();
 // Aliased: `confirm` below is the row action that approves a booking.
 const { confirm: askConfirm } = useConfirm();
 
@@ -27,11 +29,14 @@ const search = ref("");
 const dateRange = ref<"all" | "today" | "week" | "upcoming" | "past">("all");
 
 const serviceNames = computed(() =>
-  Object.fromEntries(servicesStore.items.map((s) => [s.id, s.name])),
+  Object.fromEntries(servicesStore.items.map((s) => [s.id, localizedServiceName(s, locale.value)])),
 );
 
 const serviceName = (booking: AdminBooking): string =>
   serviceNames.value[booking.serviceId] ?? t("bookings.unnamedService", { id: booking.serviceId });
+
+const bookingHours = (booking: AdminBooking): string =>
+  `${shortTime(booking.slotStartTime)}–${shortTime(booking.slotEndTime)}`;
 
 // The named ranges are turned into "yyyy-MM-dd" bounds here, so the API stays a
 // plain date-range filter instead of learning what "this week" means. Read once
@@ -189,6 +194,8 @@ async function cancel(booking: AdminBooking): Promise<void> {
               <p dir="ltr" class="u-data mt-1 text-xs text-ink-faint rtl:text-end">
                 {{ booking.bookingDate }}
                 <span class="mx-1 text-line" aria-hidden="true">/</span>
+                <span class="text-ink-soft">{{ bookingHours(booking) }}</span>
+                <span class="mx-1 text-line" aria-hidden="true">/</span>
                 <span>{{ booking.patientPhone || booking.patientEmail }}</span>
               </p>
             </div>
@@ -225,7 +232,7 @@ async function cancel(booking: AdminBooking): Promise<void> {
           <thead>
             <tr class="border-b border-line">
               <th class="u-label px-5 py-4 text-start text-ink-faint">
-                {{ t("common.fields.date") }}
+                {{ t("common.fields.dateTime") }}
               </th>
               <th class="u-label px-5 py-4 text-start text-ink-faint">
                 {{ t("common.fields.user") }}
@@ -247,8 +254,11 @@ async function cancel(booking: AdminBooking): Promise<void> {
               :key="booking.id"
               class="border-b border-line last:border-0"
             >
-              <td class="u-data px-5 py-4">
+              <td class="u-data px-5 py-4 whitespace-nowrap">
                 <span dir="ltr" class="inline-block">{{ booking.bookingDate }}</span>
+                <span dir="ltr" class="mt-0.5 block text-xs text-ink-faint">
+                  {{ bookingHours(booking) }}
+                </span>
               </td>
               <td class="px-5 py-4">
                 <div class="font-medium">{{ booking.patientName }}</div>

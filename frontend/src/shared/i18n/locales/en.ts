@@ -54,6 +54,8 @@ const en = {
       password: "Password",
       phone: "Phone",
       date: "Date",
+      dateTime: "Date & time",
+      time: "Time",
       notes: "Notes",
       status: "Status",
       service: "Service",
@@ -194,6 +196,14 @@ const en = {
     slotRequired: "Choose a slot first.",
     dayMismatch: "That date does not fall on the slot’s day of week.",
     pickDay: "Pick a {day}.",
+
+    sentEyebrow: "Request received",
+    sentTitle: "Your request is with the clinic",
+    sentBody:
+      "Nothing is booked yet. Reception works through new requests during clinic hours, and this appointment moves to confirmed once a member of staff approves it.",
+    sentWhen: "You asked for",
+    viewBookings: "View my bookings",
+    bookAnother: "Book another session",
 
     mineTitle: "My bookings",
     mineSubtitle: "Your appointments, soonest first.",

@@ -5,6 +5,8 @@ import { storeToRefs } from "pinia";
 import { useI18n } from "vue-i18n";
 import { useBookingsStore } from "../store";
 import { useServicesStore } from "@/features/services/store";
+import { serviceName } from "@/features/services/labels";
+import { shortTime } from "@/features/slots/types";
 import type { Booking } from "../types";
 import { apiErrorMessage } from "@/shared/api/client";
 import { useConfirm } from "@/shared/composables/useConfirm";
@@ -20,9 +22,9 @@ const { confirm } = useConfirm();
 
 const error = ref<string | null>(null);
 
-// serviceId -> name, so each booking can show its service.
+// serviceId -> name in the reader's language.
 const serviceNames = computed(() =>
-  Object.fromEntries(servicesStore.items.map((s) => [s.id, s.name])),
+  Object.fromEntries(servicesStore.items.map((s) => [s.id, serviceName(s, locale.value)])),
 );
 
 // Soonest first — the next appointment is the one you came here to check.
@@ -107,12 +109,14 @@ async function cancel(booking: Booking): Promise<void> {
               t("bookings.unnamedService", { id: booking.serviceId })
             }}
           </p>
-          <p class="mt-0.5 text-sm text-ink-faint">
-            {{ weekdayFormat.format(asDate(booking.bookingDate)) }}
-            <template v-if="booking.notes">
-              <span class="mx-1.5 text-line" aria-hidden="true">/</span>{{ booking.notes }}
-            </template>
+          <p class="mt-0.5 flex flex-wrap items-baseline gap-x-2 text-sm text-ink-faint">
+            <span>{{ weekdayFormat.format(asDate(booking.bookingDate)) }}</span>
+            <span class="text-line" aria-hidden="true">/</span>
+            <span dir="ltr" class="u-data text-ink-soft">
+              {{ shortTime(booking.slotStartTime) }}–{{ shortTime(booking.slotEndTime) }}
+            </span>
           </p>
+          <p v-if="booking.notes" class="mt-1 text-sm text-ink-faint">{{ booking.notes }}</p>
         </div>
 
         <!-- On a phone the status and the action drop to their own line, indented

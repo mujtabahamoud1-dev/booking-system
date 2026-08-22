@@ -8,6 +8,8 @@ export interface Booking {
   serviceId: number;
   slotId: number;
   bookingDate: string; // "yyyy-MM-dd"
+  slotStartTime: string; // "HH:mm:ss"
+  slotEndTime: string; // "HH:mm:ss"
   status: BookingStatus;
   notes: string | null;
   createdAt: string;

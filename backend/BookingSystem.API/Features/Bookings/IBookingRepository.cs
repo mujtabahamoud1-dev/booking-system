@@ -2,8 +2,8 @@ namespace BookingSystem.API.Features.Bookings;
 
 public interface IBookingRepository
 {
-    Task<Booking?> GetByIdAsync(int id);
-    Task<List<Booking>> GetForUserAsync(int userId);
+    Task<BookingWithSlot?> GetByIdAsync(int id);
+    Task<List<BookingWithSlot>> GetForUserAsync(int userId);
     Task<List<BookingWithPatient>> GetAllAsync(AdminBookingQuery query);
     Task<BookingStatusCounts> CountByStatusAsync(AdminBookingQuery query);
 
@@ -12,6 +12,6 @@ public interface IBookingRepository
     Task<SlotInfo?> LockSlotAsync(int slotId);
     Task<int> CountActiveForSlotAsync(int slotId, DateOnly bookingDate);
 
-    Task<Booking> CreateAsync(Booking booking);
-    Task<Booking?> UpdateStatusAsync(int id, BookingStatus status);
+    Task<BookingWithSlot> CreateAsync(Booking booking);
+    Task<BookingWithSlot?> UpdateStatusAsync(int id, BookingStatus status);
 }
