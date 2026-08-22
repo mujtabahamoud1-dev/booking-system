@@ -34,10 +34,12 @@ public class ServiceService : IServiceService
     {
         var service = await _services.CreateAsync(new Service
         {
-            Name        = req.Name,
-            Description = req.Description,
-            Duration    = req.Duration,
-            Price       = req.Price
+            Name          = req.Name,
+            NameAr        = req.NameAr,
+            Description   = req.Description,
+            DescriptionAr = req.DescriptionAr,
+            Duration      = req.Duration,
+            Price         = req.Price
         });
         return ServiceResponse.From(service);
     }
@@ -46,12 +48,14 @@ public class ServiceService : IServiceService
     {
         var service = await _services.UpdateAsync(new Service
         {
-            Id          = id,
-            Name        = req.Name,
-            Description = req.Description,
-            Duration    = req.Duration,
-            Price       = req.Price,
-            IsActive    = req.IsActive
+            Id            = id,
+            Name          = req.Name,
+            NameAr        = req.NameAr,
+            Description   = req.Description,
+            DescriptionAr = req.DescriptionAr,
+            Duration      = req.Duration,
+            Price         = req.Price,
+            IsActive      = req.IsActive
         });
         return service is null ? null : ServiceResponse.From(service);
     }

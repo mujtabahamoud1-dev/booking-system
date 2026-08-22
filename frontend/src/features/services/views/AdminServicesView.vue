@@ -3,6 +3,7 @@ import { computed, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useI18n } from "vue-i18n";
 import { useServicesStore } from "../store";
+import { useServiceLabels } from "../labels";
 import type { Service, UpdateServiceRequest } from "../types";
 import { apiErrorMessage } from "@/shared/api/client";
 import { useConfirm } from "@/shared/composables/useConfirm";
@@ -17,6 +18,7 @@ import FilterChips from "@/shared/components/FilterChips.vue";
 const store = useServicesStore();
 const { adminItems: items, adminCounts: counts, adminLoaded, loading } = storeToRefs(store);
 const { t } = useI18n();
+const { serviceName, serviceDescription } = useServiceLabels();
 const { confirm } = useConfirm();
 
 const showForm = ref(false);
@@ -71,7 +73,9 @@ async function save(payload: UpdateServiceRequest): Promise<void> {
     } else {
       await store.create({
         name: payload.name,
+        nameAr: payload.nameAr,
         description: payload.description,
+        descriptionAr: payload.descriptionAr,
         duration: payload.duration,
         price: payload.price,
       });
@@ -86,7 +90,7 @@ async function save(payload: UpdateServiceRequest): Promise<void> {
 
 async function remove(service: Service): Promise<void> {
   const ok = await confirm({
-    message: t("services.confirmDelete", { name: service.name }),
+    message: t("services.confirmDelete", { name: serviceName(service) }),
     confirmLabel: t("common.actions.delete"),
   });
   if (!ok) return;
@@ -154,7 +158,7 @@ async function remove(service: Service): Promise<void> {
       >
         <li v-for="service in items" :key="service.id" class="border-b border-line py-4">
           <div class="flex items-start justify-between gap-3">
-            <p class="min-w-0 font-medium">{{ service.name }}</p>
+            <p class="min-w-0 font-medium">{{ serviceName(service) }}</p>
             <span
               class="u-label inline-flex shrink-0 items-center gap-1.5 rounded-sm px-2 py-1"
               :class="service.isActive ? 'bg-brand-soft text-brand' : 'bg-ground text-ink-faint'"
@@ -168,8 +172,8 @@ async function remove(service: Service): Promise<void> {
             </span>
           </div>
 
-          <p v-if="service.description" class="mt-1 text-sm text-ink-soft">
-            {{ service.description }}
+          <p v-if="serviceDescription(service)" class="mt-1 text-sm text-ink-soft">
+            {{ serviceDescription(service) }}
           </p>
 
           <p class="u-data mt-2 text-sm text-ink-soft">
@@ -227,9 +231,9 @@ async function remove(service: Service): Promise<void> {
               class="border-b border-line last:border-0"
             >
               <td class="px-5 py-4">
-                <div class="font-medium">{{ service.name }}</div>
+                <div class="font-medium">{{ serviceName(service) }}</div>
                 <div class="mt-0.5 text-ink-faint">
-                  {{ service.description || t("common.emptyValue") }}
+                  {{ serviceDescription(service) || t("common.emptyValue") }}
                 </div>
               </td>
               <td class="u-data px-5 py-4 text-ink-soft">

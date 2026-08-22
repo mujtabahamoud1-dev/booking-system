@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useI18n } from "vue-i18n";
 import { useServicesStore } from "@/features/services/store";
+import { serviceName } from "@/features/services/labels";
 import { useSlotsStore } from "../store";
 import { DAY_INDEXES, shortTime, type Slot, type UpdateSlotRequest } from "../types";
 import { apiErrorMessage } from "@/shared/api/client";
@@ -20,7 +21,7 @@ const servicesStore = useServicesStore();
 const slotsStore = useSlotsStore();
 const { items: services } = storeToRefs(servicesStore);
 const { adminItems: slots, adminCounts: counts, adminLoaded, loading } = storeToRefs(slotsStore);
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const { confirm } = useConfirm();
 
 // "all" is a review mode: one service at a time answers "when does this run",
@@ -45,7 +46,9 @@ watch([selectedServiceId, dayFilter], () => {
   });
 });
 
-const serviceNames = computed(() => Object.fromEntries(services.value.map((s) => [s.id, s.name])));
+const serviceNames = computed(() =>
+  Object.fromEntries(services.value.map((s) => [s.id, serviceName(s, locale.value)])),
+);
 
 // Counted in the database for the chosen service, ignoring the day filter — so
 // the chips keep saying what the other days hold while one is selected.
@@ -168,7 +171,7 @@ async function remove(slot: Slot): Promise<void> {
             {{ t("slots.allServices") }}
           </option>
           <option v-for="service in services" :key="service.id" :value="service.id">
-            {{ service.name }}
+            {{ serviceNames[service.id] }}
           </option>
         </BaseSelect>
       </div>

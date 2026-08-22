@@ -13,7 +13,9 @@ const props = defineProps<{ service: Service | null; submitting: boolean }>();
 const emit = defineEmits<{ save: [payload: UpdateServiceRequest]; cancel: [] }>();
 
 const name = ref(props.service?.name ?? "");
+const nameAr = ref(props.service?.nameAr ?? "");
 const description = ref(props.service?.description ?? "");
+const descriptionAr = ref(props.service?.descriptionAr ?? "");
 const duration = ref<number>(props.service?.duration ?? 30);
 const price = ref<number>(props.service?.price ?? 0);
 const isActive = ref(props.service?.isActive ?? true);
@@ -21,7 +23,10 @@ const isActive = ref(props.service?.isActive ?? true);
 function submit(): void {
   emit("save", {
     name: name.value.trim(),
+    // Blank means untranslated, not "".
+    nameAr: nameAr.value.trim() || null,
     description: description.value.trim() || null,
+    descriptionAr: descriptionAr.value.trim() || null,
     duration: Number(duration.value),
     price: Number(price.value),
     isActive: isActive.value,
@@ -31,12 +36,29 @@ function submit(): void {
 
 <template>
   <form class="space-y-5" @submit.prevent="submit">
-    <BaseInput v-model="name" :label="t('common.fields.name')" required />
+    <BaseInput v-model="name" :label="t('services.nameEn')" required />
     <BaseInput
       v-model="description"
-      :label="t('common.fields.description')"
+      :label="t('services.descriptionEn')"
       :placeholder="t('common.fields.optional')"
     />
+
+    <fieldset class="space-y-5 border-t border-line pt-5">
+      <legend class="sr-only">{{ t("services.translationHint") }}</legend>
+      <p class="text-sm text-ink-faint">{{ t("services.translationHint") }}</p>
+      <BaseInput
+        v-model="nameAr"
+        :label="t('services.nameAr')"
+        dir="rtl"
+        :placeholder="t('common.fields.optional')"
+      />
+      <BaseInput
+        v-model="descriptionAr"
+        :label="t('services.descriptionAr')"
+        dir="rtl"
+        :placeholder="t('common.fields.optional')"
+      />
+    </fieldset>
     <div class="grid grid-cols-2 gap-4">
       <BaseInput
         v-model="duration"

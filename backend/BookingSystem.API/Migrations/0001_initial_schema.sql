@@ -17,13 +17,16 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
     created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
+-- *_ar hold the Arabic copy; nullable, and the UI falls back to English.
 CREATE TABLE IF NOT EXISTS services (
-    id          SERIAL          PRIMARY KEY,
-    name        VARCHAR(100)    NOT NULL,
-    description VARCHAR(500),
-    duration    INT             NOT NULL,
-    price       NUMERIC(10, 2)  NOT NULL,
-    is_active   BOOLEAN         NOT NULL DEFAULT TRUE
+    id             SERIAL          PRIMARY KEY,
+    name           VARCHAR(100)    NOT NULL,
+    name_ar        VARCHAR(100),
+    description    VARCHAR(500),
+    description_ar VARCHAR(500),
+    duration       INT             NOT NULL,
+    price          NUMERIC(10, 2)  NOT NULL,
+    is_active      BOOLEAN         NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE IF NOT EXISTS available_slots (
@@ -51,3 +54,5 @@ CREATE INDEX IF NOT EXISTS idx_bookings_user_id    ON bookings(user_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_service_id ON bookings(service_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_date       ON bookings(booking_date);
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
+-- Slots are always looked up by service.
+CREATE INDEX IF NOT EXISTS idx_slots_service_id    ON available_slots(service_id);

@@ -1,11 +1,15 @@
-// Mirrors Features/Services/ServiceDTOs.cs.
+// Mirrors Features/Services/ServiceDTOs.cs
 export interface Service {
   id: number;
   name: string;
+  nameAr: string | null;
   description: string | null;
+  descriptionAr: string | null;
   duration: number; // minutes
   price: number;
   isActive: boolean;
+  // Weekdays with slots, ascending, 0 = Sunday
+  days: number[];
 }
 
 // Mirrors ServiceQuery: the admin list's filters, applied by the database.
@@ -29,14 +33,18 @@ export interface ServiceListResponse {
 
 export interface CreateServiceRequest {
   name: string;
+  nameAr: string | null;
   description: string | null;
+  descriptionAr: string | null;
   duration: number;
   price: number;
 }
 
 export interface UpdateServiceRequest {
   name: string;
+  nameAr: string | null;
   description: string | null;
+  descriptionAr: string | null;
   duration: number;
   price: number;
   isActive: boolean;
