@@ -160,8 +160,12 @@ function label(slot: Slot): string {
             :role="selectable ? 'radio' : undefined"
             :aria-checked="selectable ? selectedId === slot.id : undefined"
             :aria-label="label(slot)"
-            class="block w-full rounded-sm px-3 py-2.5 text-start transition-colors"
-            :class="selectedId === slot.id ? 'bg-brand text-surface' : 'bg-brand-soft text-brand'"
+            class="block w-full rounded-sm border px-3 py-2.5 text-start transition-colors"
+            :class="
+              selectedId === slot.id
+                ? 'border-brand bg-brand text-surface'
+                : 'border-brand/50 bg-slot text-brand'
+            "
             @click="selectable && emit('select', slot)"
           >
             <span class="flex items-baseline justify-between gap-3">
@@ -254,12 +258,12 @@ function label(slot: Slot): string {
               :aria-checked="selectable ? selectedId === slot.id : undefined"
               :aria-label="label(slot)"
               :title="label(slot)"
-              class="u-extend absolute inset-y-0 flex min-w-11 items-center justify-between gap-2 overflow-hidden rounded-sm px-2 text-start transition-colors"
+              class="u-extend absolute inset-y-0 flex min-w-11 items-center justify-between gap-2 overflow-hidden rounded-sm border px-2 text-start transition-colors"
               :class="[
                 selectable ? 'cursor-pointer' : '',
                 selectedId === slot.id
-                  ? 'bg-brand text-surface'
-                  : 'bg-brand-soft text-brand hover:bg-brand/20',
+                  ? 'border-brand bg-brand text-surface'
+                  : 'border-brand/50 bg-slot text-brand hover:bg-brand/25',
               ]"
               :style="{
                 left: `${geometry(slot).start}%`,

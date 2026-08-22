@@ -23,6 +23,9 @@
   --color-brand-deep: #143329;
   --color-brand-soft: #e0e9e1;
 
+  /* Slot bar fill — heavier than brand-soft so cover reads as a shape. */
+  --color-slot: #cbdccf;
+
   --color-signal: #c98a12;
   --color-signal-ink: #7a5207;
   --color-signal-soft: #f7edd7;
