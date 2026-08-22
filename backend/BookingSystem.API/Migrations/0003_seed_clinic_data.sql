@@ -1,47 +1,86 @@
--- Realistic demo data for a small Arabic-language clinic ("عيادة النور الطبية").
+-- Demo data for Atlas Physiotherapy — one clinic, one discipline, two languages.
 --
 -- Every seeded client shares the same password as the 0002 admin: "a"
 -- (BCrypt $2a$11$ hash, verified by AuthService.Verify). Dev/demo only —
 -- never let this script run against an environment that matters.
 --
 -- day_of_week follows .NET's DayOfWeek (0=Sunday .. 6=Saturday), matching the
--- check in BookingService.CreateAsync. The clinic works Sunday–Thursday, so
--- no slots exist for Friday (5) or Saturday (6).
+-- check in BookingService.CreateAsync. The clinic works Sunday–Thursday, so no
+-- slots exist for Friday (5) or Saturday (6), and every slot sits inside the
+-- 08:00–18:00 day the front end draws its time axis against.
 --
--- Booking dates are computed relative to CURRENT_DATE rather than hardcoded,
--- so the demo still shows a sensible mix of past and upcoming appointments no
+-- Booking dates are computed relative to CURRENT_DATE rather than hardcoded, so
+-- the demo still shows a sensible mix of past and upcoming appointments no
 -- matter when the database is first created.
 --
 -- Each section is guarded so a partially-seeded database won't collide.
 
 -- ---------------------------------------------------------------------------
--- Services
+-- Services — Hydrotherapy is seeded inactive on purpose
 -- ---------------------------------------------------------------------------
-INSERT INTO services (name, description, duration, price, is_active)
-SELECT v.name, v.description, v.duration, v.price, v.is_active
+-- The leading ordinal pins the insert order; the list is sorted by id.
+INSERT INTO services (name, name_ar, description, description_ar, duration, price, is_active)
+SELECT v.name, v.name_ar, v.description, v.description_ar, v.duration, v.price, v.is_active
 FROM (VALUES
-    ('كشف باطنة عام',           'استشارة طب باطني شاملة مع قياس المؤشرات الحيوية ومراجعة التاريخ المرضي', 30, 150.00, TRUE),
-    ('استشارة أسنان',            'فحص شامل للأسنان واللثة مع وضع خطة علاج مبدئية',                        30, 200.00, TRUE),
-    ('تنظيف وتلميع الأسنان',     'إزالة الجير والتصبغات وتلميع الأسنان',                                  45, 350.00, TRUE),
-    ('كشف جلدية',               'تشخيص الأمراض الجلدية والحساسية ومشاكل الشعر',                          20, 180.00, TRUE),
-    ('جلسة علاج طبيعي',          'جلسة تأهيل حركي للعمود الفقري والمفاصل تحت إشراف أخصائي',               60, 250.00, TRUE),
-    ('كشف أطفال',               'فحص دوري للأطفال ومتابعة النمو وجدول التطعيمات',                        30, 160.00, TRUE),
-    ('متابعة حمل',              'متابعة دورية للحامل مع سونار ثنائي الأبعاد',                            30, 220.00, TRUE),
-    ('تحاليل مخبرية شاملة',      'باقة تشمل صورة الدم الكاملة ووظائف الكبد والكلى والسكر التراكمي',       15, 400.00, TRUE),
-    ('أشعة سينية',              'تصوير بالأشعة السينية للصدر أو العظام مع تقرير الأخصائي',               15, 300.00, TRUE),
-    ('كشف عيون وقياس نظر',      'فحص قاع العين وقياس ضغط العين وتحديد درجة النظر',                       25, 190.00, TRUE),
-    ('استشارة تغذية علاجية',     'خطة غذائية مخصصة لإنقاص الوزن أو لمرضى السكري',                        45, 200.00, TRUE),
-    ('كشف عظام ومفاصل',         'تشخيص إصابات الملاعب وآلام الظهر والمفاصل',                             30, 230.00, TRUE),
-    ('لقاح الإنفلونزا الموسمية', 'تطعيم موسمي — موقوف مؤقتاً لحين وصول الدفعة الجديدة',                   10, 120.00, FALSE)
-) AS v(name, description, duration, price, is_active)
-WHERE NOT EXISTS (SELECT 1 FROM services s WHERE s.name = v.name);
+    (1, 'Initial assessment',    'تقييم مبدئي',
+     'A full movement and history review, and a plan for where to go next.',
+     'فحص شامل للحركة ومراجعة التاريخ المرضي، مع خطة علاج واضحة للخطوات القادمة.',
+     45,  90.00, TRUE),
+
+    (2, 'Follow-up session',     'جلسة متابعة',
+     'A standard treatment session once your programme is under way.',
+     'جلسة علاجية اعتيادية بعد بدء البرنامج العلاجي.',
+     30,  60.00, TRUE),
+
+    (3, 'Manual therapy',        'علاج يدوي',
+     'Hands-on joint and soft-tissue work for pain and stiffness.',
+     'عمل يدوي على المفاصل والأنسجة الرخوة لتخفيف الألم والتيبس.',
+     30,  65.00, TRUE),
+
+    (4, 'Sports injury rehab',   'تأهيل الإصابات الرياضية',
+     'Loaded strength work for return to sport after a soft-tissue injury.',
+     'تمارين قوة تدريجية للعودة إلى النشاط الرياضي بعد إصابات الأنسجة الرخوة.',
+     60, 120.00, TRUE),
+
+    (5, 'Post-op recovery',      'تأهيل ما بعد الجراحة',
+     'Staged rehab following surgery, coordinated with your surgeon.',
+     'تأهيل تدريجي بعد العمليات الجراحية بالتنسيق مع الجراح المعالج.',
+     60, 110.00, TRUE),
+
+    (6, 'Back and neck programme', 'برنامج الظهر والرقبة',
+     'A structured programme for desk-related back and neck pain.',
+     'برنامج منظم لآلام الظهر والرقبة الناتجة عن الجلوس الطويل والعمل المكتبي.',
+     45,  95.00, TRUE),
+
+    (7, 'Dry needling',          'الإبر الجافة',
+     'Fine-needle treatment for trigger points and persistent muscle tightness.',
+     'علاج بالإبر الدقيقة للنقاط الزنادية والشد العضلي المزمن.',
+     30,  75.00, TRUE),
+
+    (8, 'Gait and balance clinic', 'تقييم المشي والاتزان',
+     'Walking and balance assessment, with exercises to reduce the risk of falls.',
+     'تقييم لنمط المشي والاتزان مع تمارين لتقليل خطر السقوط.',
+     45, 100.00, TRUE),
+
+    (9, 'Group exercise class',  'تمارين جماعية',
+     'A small supervised class for strength and mobility. Six places per session.',
+     'حصة جماعية صغيرة تحت الإشراف لتحسين القوة والمرونة. ستة مقاعد لكل جلسة.',
+     45,  40.00, TRUE),
+
+    (10, 'Hydrotherapy',          'العلاج المائي',
+     'Pool-based rehabilitation — suspended while the pool is refitted.',
+     'تأهيل داخل المسبح — موقوف مؤقتاً لحين الانتهاء من صيانة المسبح.',
+     45, 105.00, FALSE)
+) AS v(sort, name, name_ar, description, description_ar, duration, price, is_active)
+WHERE NOT EXISTS (SELECT 1 FROM services s WHERE s.name = v.name)
+ORDER BY v.sort;
 
 -- ---------------------------------------------------------------------------
 -- Users — one receptionist (admin) and twelve patients
 -- ---------------------------------------------------------------------------
 INSERT INTO users (name, email, password_hash, phone, role)
 VALUES
-    ('سارة عبدالرحمن الفهد',   'reception@alnoor-clinic.example', '$2a$11$rCa91kltURK3rUKHH/GxY.AbW1oExAyeKV6RG9ddlHGQri0wtt9Oy', '+966551112233', 'admin'),
+    ('سارة عبدالرحمن الفهد',   'reception@atlas-physio.example',  '$2a$11$rCa91kltURK3rUKHH/GxY.AbW1oExAyeKV6RG9ddlHGQri0wtt9Oy', '+966551112233', 'admin'),
     ('محمد أحمد الشمري',      'mohammed.alshammari@example.com',  '$2a$11$rCa91kltURK3rUKHH/GxY.AbW1oExAyeKV6RG9ddlHGQri0wtt9Oy', '+966501234567', 'client'),
     ('فاطمة عبدالله الزهراني', 'fatima.alzahrani@example.com',     '$2a$11$rCa91kltURK3rUKHH/GxY.AbW1oExAyeKV6RG9ddlHGQri0wtt9Oy', '+966502345678', 'client'),
     ('عبدالله يوسف الحربي',    'abdullah.alharbi@example.com',     '$2a$11$rCa91kltURK3rUKHH/GxY.AbW1oExAyeKV6RG9ddlHGQri0wtt9Oy', '+966503456789', 'client'),
@@ -57,59 +96,49 @@ VALUES
 ON CONFLICT (email) DO NOTHING;
 
 -- ---------------------------------------------------------------------------
--- Available slots — Sunday(0) through Thursday(4)
+-- Available slots — Sunday(0) through Thursday(4), inside 08:00–18:00
 --
--- max_bookings mirrors how the clinic actually runs: one-on-one consultations
--- take a single patient, the physio room takes three at once, and lab draws
--- and X-rays run several in parallel.
+-- max_bookings mirrors how the clinic runs: hands-on work takes one patient,
+-- rehab blocks two or three, the group class six.
+--
+-- Hydrotherapy has no slots on purpose: an empty week is a state to render.
 -- ---------------------------------------------------------------------------
 INSERT INTO available_slots (service_id, day_of_week, start_time, end_time, max_bookings)
 SELECT sv.id, v.day_of_week, v.start_time, v.end_time, v.max_bookings
 FROM (VALUES
-    -- كشف باطنة عام — morning clinic most days, evening shift midweek
-    ('كشف باطنة عام',           0, TIME '09:00', TIME '09:30', 1),
-    ('كشف باطنة عام',           0, TIME '10:00', TIME '10:30', 1),
-    ('كشف باطنة عام',           1, TIME '09:00', TIME '09:30', 1),
-    ('كشف باطنة عام',           2, TIME '17:00', TIME '17:30', 2),
-    ('كشف باطنة عام',           3, TIME '09:00', TIME '09:30', 1),
-    ('كشف باطنة عام',           4, TIME '17:00', TIME '17:30', 1),
-    -- Dental
-    ('استشارة أسنان',            0, TIME '17:00', TIME '17:30', 1),
-    ('استشارة أسنان',            2, TIME '09:00', TIME '09:30', 1),
-    ('استشارة أسنان',            4, TIME '09:00', TIME '09:30', 1),
-    ('تنظيف وتلميع الأسنان',     1, TIME '10:00', TIME '10:45', 1),
-    ('تنظيف وتلميع الأسنان',     3, TIME '17:00', TIME '17:45', 1),
-    -- Dermatology — two chairs
-    ('كشف جلدية',               0, TIME '11:00', TIME '11:20', 2),
-    ('كشف جلدية',               3, TIME '11:00', TIME '11:20', 2),
-    -- Physiotherapy — shared room, three patients per session
-    ('جلسة علاج طبيعي',          0, TIME '08:00', TIME '09:00', 3),
-    ('جلسة علاج طبيعي',          2, TIME '08:00', TIME '09:00', 3),
-    ('جلسة علاج طبيعي',          4, TIME '08:00', TIME '09:00', 3),
-    -- Pediatrics
-    ('كشف أطفال',               1, TIME '17:00', TIME '17:30', 2),
-    ('كشف أطفال',               3, TIME '09:30', TIME '10:00', 2),
-    -- OB/GYN
-    ('متابعة حمل',              2, TIME '10:00', TIME '10:30', 1),
-    ('متابعة حمل',              4, TIME '10:00', TIME '10:30', 1),
-    -- Lab draws — early, fasting, high throughput
-    ('تحاليل مخبرية شاملة',      0, TIME '07:30', TIME '07:45', 6),
-    ('تحاليل مخبرية شاملة',      1, TIME '07:30', TIME '07:45', 6),
-    ('تحاليل مخبرية شاملة',      2, TIME '07:30', TIME '07:45', 6),
-    ('تحاليل مخبرية شاملة',      3, TIME '07:30', TIME '07:45', 6),
-    ('تحاليل مخبرية شاملة',      4, TIME '07:30', TIME '07:45', 6),
-    -- Imaging
-    ('أشعة سينية',              0, TIME '12:00', TIME '12:15', 4),
-    ('أشعة سينية',              3, TIME '12:00', TIME '12:15', 4),
-    -- Ophthalmology
-    ('كشف عيون وقياس نظر',      1, TIME '11:00', TIME '11:25', 2),
-    ('كشف عيون وقياس نظر',      4, TIME '11:00', TIME '11:25', 2),
-    -- Nutrition — evening only
-    ('استشارة تغذية علاجية',     2, TIME '18:00', TIME '18:45', 1),
-    ('استشارة تغذية علاجية',     4, TIME '18:00', TIME '18:45', 1),
-    -- Orthopedics — evening only
-    ('كشف عظام ومفاصل',         0, TIME '18:00', TIME '18:30', 1),
-    ('كشف عظام ومفاصل',         3, TIME '18:00', TIME '18:30', 1)
+    -- Initial assessment — new patients, mornings plus one afternoon clinic
+    ('Initial assessment',      0, TIME '09:00', TIME '12:00', 3),
+    ('Initial assessment',      2, TIME '14:00', TIME '17:00', 3),
+    ('Initial assessment',      4, TIME '09:00', TIME '11:00', 2),
+    -- Follow-up session — the bulk of the week's work
+    ('Follow-up session',       0, TIME '13:00', TIME '15:00', 4),
+    ('Follow-up session',       1, TIME '09:00', TIME '12:00', 4),
+    ('Follow-up session',       3, TIME '13:00', TIME '16:00', 4),
+    ('Follow-up session',       4, TIME '15:00', TIME '17:00', 4),
+    -- Manual therapy — one practitioner, one patient at a time
+    ('Manual therapy',          1, TIME '08:00', TIME '10:00', 1),
+    ('Manual therapy',          3, TIME '16:00', TIME '18:00', 1),
+    ('Manual therapy',          4, TIME '08:00', TIME '10:00', 1),
+    -- Sports injury rehab — gym floor, two at once
+    ('Sports injury rehab',     0, TIME '16:00', TIME '18:00', 2),
+    ('Sports injury rehab',     2, TIME '08:00', TIME '10:00', 2),
+    ('Sports injury rehab',     4, TIME '16:00', TIME '18:00', 2),
+    -- Post-op recovery — one-to-one, quieter parts of the day
+    ('Post-op recovery',        1, TIME '13:00', TIME '15:00', 1),
+    ('Post-op recovery',        3, TIME '09:00', TIME '11:00', 1),
+    -- Back and neck programme
+    ('Back and neck programme', 2, TIME '10:00', TIME '12:00', 2),
+    ('Back and neck programme', 4, TIME '13:00', TIME '15:00', 2),
+    -- Dry needling
+    ('Dry needling',            1, TIME '15:00', TIME '17:00', 1),
+    ('Dry needling',            3, TIME '11:00', TIME '13:00', 1),
+    -- Gait and balance clinic
+    ('Gait and balance clinic', 1, TIME '10:00', TIME '12:00', 2),
+    ('Gait and balance clinic', 3, TIME '14:00', TIME '16:00', 2),
+    -- Group exercise class — six places, start and end of the day
+    ('Group exercise class',    0, TIME '08:00', TIME '09:00', 6),
+    ('Group exercise class',    2, TIME '12:00', TIME '13:00', 6),
+    ('Group exercise class',    4, TIME '08:00', TIME '09:00', 6)
 ) AS v(service_name, day_of_week, start_time, end_time, max_bookings)
 JOIN services sv ON sv.name = v.service_name
 WHERE NOT EXISTS (
@@ -126,8 +155,8 @@ WHERE NOT EXISTS (
 -- negative is history, 0 is this week, positive is upcoming. The date always
 -- lands on the slot's own weekday, which BookingService requires.
 --
--- The Sunday 08:00 physio session is deliberately booked to its full capacity
--- of three, so the "slot full" path has real data behind it.
+-- Monday 08:00 manual therapy and Thursday 09:00 assessment are booked to
+-- capacity, so the "slot full" path has data behind it.
 -- ---------------------------------------------------------------------------
 INSERT INTO bookings (user_id, service_id, slot_id, booking_date, status, notes)
 SELECT u.id, sv.id, sl.id,
@@ -137,29 +166,30 @@ SELECT u.id, sv.id, sl.id,
        v.status, v.notes
 FROM (VALUES
     -- This week
-    ('mohammed.alshammari@example.com', 'كشف باطنة عام',      0, TIME '09:00',  0, 'confirmed', 'متابعة ضغط الدم وصرف الدواء الشهري'),
-    ('fatima.alzahrani@example.com',    'متابعة حمل',          2, TIME '10:00',  0, 'confirmed', 'الأسبوع الثاني والعشرون — سونار متابعة'),
-    ('abdullah.alharbi@example.com',    'تحاليل مخبرية شاملة',  1, TIME '07:30',  0, 'pending',   'صائم من الساعة العاشرة مساءً'),
-    ('noura.alqahtani@example.com',     'كشف جلدية',           3, TIME '11:00',  0, 'confirmed', 'حساسية جلدية متكررة في اليدين'),
-    ('yousef.albalushi@example.com',    'تحاليل مخبرية شاملة',  2, TIME '07:30',  0, 'confirmed', 'فحص السكر التراكمي كل ثلاثة أشهر'),
-    -- Sunday physio session, filled to capacity (max_bookings = 3)
-    ('khaled.almutairi@example.com',    'جلسة علاج طبيعي',      0, TIME '08:00',  0, 'confirmed', 'الجلسة الرابعة لعلاج الانزلاق الغضروفي'),
-    ('mariam.alotaibi@example.com',     'جلسة علاج طبيعي',      0, TIME '08:00',  0, 'confirmed', 'تأهيل ما بعد عملية الرباط الصليبي'),
-    ('omar.aldosari@example.com',       'جلسة علاج طبيعي',      0, TIME '08:00',  0, 'pending',   'ألم مزمن أسفل الظهر'),
-    ('huda.alghamdi@example.com',       'كشف أطفال',           1, TIME '17:00',  0, 'confirmed', 'تطعيم الشهر التاسع ومتابعة الوزن'),
+    ('mohammed.alshammari@example.com', 'Initial assessment',      0, TIME '09:00',  0, 'confirmed', 'ألم أسفل الظهر منذ ثلاثة أسابيع'),
+    ('fatima.alzahrani@example.com',    'Follow-up session',       1, TIME '09:00',  0, 'confirmed', 'الجلسة الثالثة — تحسن ملحوظ في المدى الحركي'),
+    ('abdullah.alharbi@example.com',    'Manual therapy',          1, TIME '08:00',  0, 'confirmed', 'تيبس في الكتف الأيمن'),
+    ('noura.alqahtani@example.com',     'Group exercise class',    0, TIME '08:00',  0, 'confirmed', 'تمارين تقوية عامة'),
+    ('khaled.almutairi@example.com',    'Sports injury rehab',     2, TIME '08:00',  0, 'pending',   'Return to running after a hamstring tear'),
+    ('mariam.alotaibi@example.com',     'Back and neck programme', 2, TIME '10:00',  0, 'confirmed', 'آلام الرقبة من العمل المكتبي'),
+    ('omar.aldosari@example.com',       'Follow-up session',       0, TIME '13:00',  0, 'pending',   'متابعة بعد التقييم المبدئي'),
+    ('huda.alghamdi@example.com',       'Gait and balance clinic', 1, TIME '10:00',  0, 'confirmed', 'تقييم الاتزان بعد كسر في الكاحل'),
+    -- Thursday's assessment clinic, filled to capacity (max_bookings = 2)
+    ('yousef.albalushi@example.com',    'Initial assessment',      4, TIME '09:00',  0, 'confirmed', 'إصابة في الركبة أثناء كرة القدم'),
+    ('layla.alansari@example.com',      'Initial assessment',      4, TIME '09:00',  0, 'pending',   'ألم في الكتف عند رفع الذراع'),
     -- Upcoming
-    ('yousef.albalushi@example.com',    'كشف عظام ومفاصل',     0, TIME '18:00',  1, 'pending',   'إصابة في الكاحل أثناء ممارسة الرياضة'),
-    ('layla.alansari@example.com',      'استشارة تغذية علاجية', 2, TIME '18:00',  1, 'confirmed', 'خطة غذائية لمرضى السكري من النوع الثاني'),
-    ('ahmed.alshehri@example.com',      'استشارة أسنان',        4, TIME '09:00',  1, 'pending',   'ألم في الضرس الخلفي عند المضغ'),
-    ('reem.alsubaie@example.com',       'تنظيف وتلميع الأسنان', 3, TIME '17:00',  1, 'confirmed', 'تنظيف دوري كل ستة أشهر'),
-    ('omar.aldosari@example.com',       'كشف عيون وقياس نظر',  4, TIME '11:00',  1, 'pending',   'ضعف في النظر أثناء القيادة الليلية'),
-    ('mariam.alotaibi@example.com',     'كشف أطفال',           3, TIME '09:30',  1, 'confirmed', 'فحص دوري وتقييم النمو'),
-    ('huda.alghamdi@example.com',       'كشف جلدية',           0, TIME '11:00',  2, 'pending',   'متابعة نتيجة العلاج بعد شهر'),
+    ('ahmed.alshehri@example.com',      'Post-op recovery',        3, TIME '09:00',  1, 'pending',   'تأهيل بعد عملية الرباط الصليبي'),
+    ('reem.alsubaie@example.com',       'Dry needling',            1, TIME '15:00',  1, 'confirmed', 'نقاط زنادية في أعلى الظهر'),
+    ('mohammed.alshammari@example.com', 'Follow-up session',       3, TIME '13:00',  1, 'pending',   'متابعة أسبوعية'),
+    ('mariam.alotaibi@example.com',     'Sports injury rehab',     4, TIME '16:00',  1, 'confirmed', 'المرحلة الأخيرة من برنامج العودة للملعب'),
+    ('omar.aldosari@example.com',       'Manual therapy',          3, TIME '16:00',  1, 'pending',   'شد عضلي في أسفل الظهر'),
+    ('noura.alqahtani@example.com',     'Group exercise class',    2, TIME '12:00',  1, 'confirmed', 'الحصة الجماعية الأسبوعية'),
+    ('huda.alghamdi@example.com',       'Back and neck programme', 4, TIME '13:00',  2, 'pending',   'متابعة بعد انتهاء البرنامج'),
     -- History
-    ('mohammed.alshammari@example.com', 'تحاليل مخبرية شاملة',  0, TIME '07:30', -1, 'confirmed', 'تحاليل ما قبل موعد الباطنة'),
-    ('khaled.almutairi@example.com',    'أشعة سينية',          3, TIME '12:00', -1, 'confirmed', 'أشعة على الصدر بناءً على طلب الطبيب'),
-    ('noura.alqahtani@example.com',     'كشف عيون وقياس نظر',  1, TIME '11:00', -1, 'cancelled', 'اعتذرت المريضة عن الحضور'),
-    ('fatima.alzahrani@example.com',    'كشف باطنة عام',       2, TIME '17:00', -2, 'cancelled', 'تم تأجيل الموعد بناءً على طلب المريضة')
+    ('khaled.almutairi@example.com',    'Initial assessment',      0, TIME '09:00', -1, 'confirmed', 'التقييم المبدئي قبل بدء البرنامج'),
+    ('layla.alansari@example.com',      'Follow-up session',       4, TIME '15:00', -1, 'confirmed', 'الجلسة الثانية'),
+    ('fatima.alzahrani@example.com',    'Gait and balance clinic', 3, TIME '14:00', -1, 'cancelled', 'اعتذرت المريضة عن الحضور'),
+    ('yousef.albalushi@example.com',    'Post-op recovery',        1, TIME '13:00', -2, 'cancelled', 'تم تأجيل الموعد بناءً على طلب المريض')
 ) AS v(email, service_name, day_of_week, start_time, week_offset, status, notes)
 JOIN users    u  ON u.email = v.email
 JOIN services sv ON sv.name = v.service_name
