@@ -8,7 +8,7 @@ namespace BookingSystem.API.Shared.Database;
 /// the same connection — Npgsql enlists commands in the connection's active
 /// transaction — and nothing needs to be threaded through repository methods.
 /// </summary>
-public sealed class DbSession : IAsyncDisposable
+public sealed class DbSession : IUnitOfWork, IAsyncDisposable
 {
     private readonly DatabaseConnection _db;
     private NpgsqlConnection? _connection;
@@ -26,22 +26,30 @@ public sealed class DbSession : IAsyncDisposable
         return _connection;
     }
 
-    public async Task<NpgsqlTransaction> BeginTransactionAsync()
+    public async Task<T> ExecuteAsync<T>(Func<Task<T>> work)
     {
         if (Transaction is not null)
             throw new InvalidOperationException("A transaction is already active for this session.");
 
         var conn = await GetConnectionAsync();
-        Transaction = await conn.BeginTransactionAsync();
-        return Transaction;
+        var tx = await conn.BeginTransactionAsync();
+        Transaction = tx;
+        try
+        {
+            var result = await work();
+            await tx.CommitAsync();
+            return result;
+        }
+        finally
+        {
+            // Disposal of an uncommitted transaction rolls back.
+            await tx.DisposeAsync();
+            Transaction = null;
+        }
     }
-
-    internal void ClearTransaction() => Transaction = null;
 
     public async ValueTask DisposeAsync()
     {
-        if (Transaction is not null)
-            await Transaction.DisposeAsync();
         if (_connection is not null)
             await _connection.DisposeAsync();
     }

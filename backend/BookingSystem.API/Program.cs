@@ -59,7 +59,7 @@ builder.Services.AddScoped<DbSession>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<DbSession>());
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();

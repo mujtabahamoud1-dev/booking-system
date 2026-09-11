@@ -11,13 +11,6 @@ public class DatabaseConnection
         _connectionString = connectionString;
     }
 
-    public NpgsqlConnection Open()
-    {
-        var conn = new NpgsqlConnection(_connectionString);
-        conn.Open();
-        return conn;
-    }
-
     public async Task<NpgsqlConnection> OpenAsync()
     {
         var conn = new NpgsqlConnection(_connectionString);
